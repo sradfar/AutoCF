@@ -1,0 +1,38 @@
+{
+  "conda_prefix": "/scratch/gpfs/NLIN/sradfar/conda_envs/sfincs_agent",
+  "executables": {
+    "gdal_rasterize": "/scratch/gpfs/NLIN/sradfar/conda_envs/sfincs_agent/bin/gdal_rasterize",
+    "gdalbuildvrt": "/scratch/gpfs/NLIN/sradfar/conda_envs/sfincs_agent/bin/gdalbuildvrt",
+    "gdalwarp": "/scratch/gpfs/NLIN/sradfar/conda_envs/sfincs_agent/bin/gdalwarp",
+    "hydromt": "/scratch/gpfs/NLIN/sradfar/conda_envs/sfincs_agent/bin/hydromt",
+    "overturemaps": "/scratch/gpfs/NLIN/sradfar/conda_envs/sfincs_agent/bin/overturemaps",
+    "sfincs": null
+  },
+  "machine": "x86_64",
+  "packages": {
+    "PyYAML": "6.0.3",
+    "cdsapi": "0.7.7",
+    "geopandas": "1.1.4",
+    "hydromt": "0.9.4",
+    "hydromt_sfincs": "1.0.3",
+    "matplotlib": "3.11.1",
+    "numpy": "2.4.6",
+    "overturemaps": "1.0.2",
+    "pandas": "3.0.5",
+    "pyproj": "3.7.2",
+    "rasterio": "1.4.4",
+    "requests": "2.34.2",
+    "s3fs": "2026.7.0",
+    "shapely": "2.1.2",
+    "xarray": "2026.7.0",
+    "zarr": "2.18.7"
+  },
+  "platform": "Linux-5.14.0-687.39.1.el9_8.x86_64-x86_64-with-glibc2.34",
+  "python": "3.11.15 | packaged by conda-forge | (main, Aug 11 2026, 10:26:29) [GCC 14.4.0]",
+  "python_executable": "/scratch/gpfs/NLIN/sradfar/conda_envs/sfincs_agent/bin/python",
+  "sfincs": {
+    "path": "/scratch/gpfs/NLIN/sradfar/software/sfincs/gpu/bin/sfincs",
+    "sha256": "7d02bccf28c8d60aebff1eaa47d67049ca8eeb7b82478585977250159434cc4e",
+    "size_bytes": 16479120
+  }
+}

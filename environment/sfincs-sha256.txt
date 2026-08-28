@@ -1,0 +1,1 @@
+7d02bccf28c8d60aebff1eaa47d67049ca8eeb7b82478585977250159434cc4e  /scratch/gpfs/NLIN/sradfar/software/sfincs/gpu/bin/sfincs

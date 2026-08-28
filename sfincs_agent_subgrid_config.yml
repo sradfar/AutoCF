@@ -1,0 +1,19 @@
+# Only values that differ from sfincs_agent_config.yml are defined here.
+extends: sfincs_agent_config.yml
+
+project:
+  run_name: tampa_helene_2024_gcn250_subgrid_infiltration
+
+model:
+  mode: subgrid
+
+  subgrid:
+    nr_subgrid_pixels: 20
+    nlevels: 10
+    landcover_output_resolution_m: 10
+
+  infiltration:
+    enabled: true
+    method: cn
+    source: gcn250
+    antecedent_moisture: avg
