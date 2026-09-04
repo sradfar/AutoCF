@@ -5,11 +5,12 @@ sfincs_global_validation.py
 Global water-level validation for AutoCF.
 
 Production validation intentionally excludes SAR/remote-sensing flood-extent
-products. Water-level validation uses:
+products. Water-level validation uses only stations inside/on the SFINCS domain and follows:
   1) NOAA CO-OPS where available (absolute datum when requested), then
-  2) UHSLC/JASL Research Quality hourly data where available, then
-  3) UHSLC Fast Delivery hourly data as a global fallback, or
-  4) a user-provided file.
+  2) GESLA-4.1 where available, then
+  3) UHSLC/JASL Research Quality hourly data where available, then
+  4) UHSLC Fast Delivery hourly data as a global fallback, or
+  5) a user-provided file.
 
 UHSLC water levels are referenced to station zero. When their datum is not the
 same as the SFINCS vertical datum, AutoCF estimates ONE constant datum offset
@@ -86,6 +87,35 @@ def _distance_to_domain_km(lon: float, lat: float, domain) -> float:
 
 def _safe_id(value: Any) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]+", "_", str(value)).strip("_") or "station"
+
+
+def _station_is_inside_domain(row: Any, domain) -> bool:
+    """Return True only when a validation station is covered by the SFINCS domain.
+
+    ``covers`` intentionally includes points exactly on the polygon boundary.
+    Automatic provider search must never expand validation outside the modeled
+    domain. This rule is separate from boundary-forcing station selection.
+    """
+    try:
+        geom = row.get("geometry") if hasattr(row, "get") else None
+    except Exception:
+        geom = None
+    try:
+        if geom is not None and not geom.is_empty:
+            point = geom
+        else:
+            point = Point(float(row["lon"]), float(row["lat"]))
+        return bool(domain.covers(point))
+    except Exception:
+        return False
+
+
+def _filter_stations_inside_domain(candidates: pd.DataFrame, domain) -> pd.DataFrame:
+    """Filter provider candidates to stations physically inside/on the domain."""
+    if candidates.empty:
+        return candidates.copy()
+    mask = candidates.apply(lambda row: _station_is_inside_domain(row, domain), axis=1)
+    return candidates.loc[np.asarray(mask, dtype=bool)].copy()
 
 
 def discover_noaa(domain, cfg: Dict[str, Any]) -> pd.DataFrame:
@@ -367,7 +397,10 @@ def prepare_water_level_validation(cfg: Dict[str, Any]) -> Optional[Path]:
         and (run / "sfincs_his.nc").exists()
         and existing_station_file.exists()
     ):
-        log(f"reusing completed-model station order: {existing_station_file}")
+        log(
+            f"reusing completed-model station order: {existing_station_file} "
+            "(point_zs column mapping preserved; evaluation still excludes out-of-domain stations)"
+        )
         return existing_station_file
 
     if str(vcfg.get("provider", "auto")).lower() == "file":
@@ -472,7 +505,10 @@ def prepare_water_level_validation(cfg: Dict[str, Any]) -> Optional[Path]:
             return station_file
 
     domain = _domain_geometry(cfg)
-    radius = float(vcfg.get("search_radius_km", 150.0))
+    # Validation has a strict spatial eligibility rule: a station must lie
+    # inside or exactly on the SFINCS domain polygon. ``search_radius_km`` is
+    # retained in old YAML files for backward compatibility but is NOT used
+    # for validation station eligibility. Boundary-forcing selection is separate.
     max_stations = int(vcfg.get("max_stations", 12))
     min_stations = int(vcfg.get("min_stations", 1))
     candidate_limit = int(vcfg.get("candidate_limit_per_provider", 30))
@@ -512,8 +548,22 @@ def prepare_water_level_validation(cfg: Dict[str, Any]) -> Optional[Path]:
                 raise RuntimeError(f"Unknown water-level provider: {prov}")
 
             if candidates.empty:
+                provider_errors[canonical] = "provider returned no station metadata"
                 continue
-            candidates = candidates[candidates["distance_km"] <= radius].head(candidate_limit)
+
+            n_provider = int(len(candidates))
+            candidates = _filter_stations_inside_domain(candidates, domain)
+            log(
+                f"{canonical}: {len(candidates)}/{n_provider} station candidate(s) "
+                "inside/on SFINCS domain"
+            )
+            if candidates.empty:
+                provider_errors[canonical] = "no stations inside/on SFINCS domain"
+                continue
+
+            # Preserve the existing candidate-limit and max-stations behavior;
+            # only the spatial eligibility rule changed.
+            candidates = candidates.head(candidate_limit)
             accepted: List[Dict[str, Any]] = []
             for _, row in candidates.iterrows():
                 if len(accepted) >= max_stations:
@@ -558,7 +608,7 @@ def prepare_water_level_validation(cfg: Dict[str, Any]) -> Optional[Path]:
         manifest = {
             "status": "no_stations",
             "provider_errors": provider_errors,
-            "search_radius_km": radius,
+            "spatial_rule": "inside_or_on_sfincs_domain",
             "simulation_start": start.isoformat(),
             "simulation_end": end.isoformat(),
         }
@@ -585,7 +635,7 @@ def prepare_water_level_validation(cfg: Dict[str, Any]) -> Optional[Path]:
         "stations_file": str(station_file),
         "simulation_start": start.isoformat(),
         "simulation_end": end.isoformat(),
-        "search_radius_km": radius,
+        "spatial_rule": "inside_or_on_sfincs_domain",
         "provider_order": order,
         "provider_errors": provider_errors,
         "stations": [
@@ -597,6 +647,7 @@ def prepare_water_level_validation(cfg: Dict[str, Any]) -> Optional[Path]:
             for r in selected_rows
         ],
         "note": (
+            "Only stations inside/on the SFINCS domain are eligible for water-level validation. "
             "Remote-sensing flood-extent products are intentionally not used. "
             "GESLA datum information is unspecified and UHSLC sea levels are relative "
             "to station zero; both therefore use datum-neutral event alignment unless "
@@ -724,8 +775,19 @@ def compare_model_to_water_levels(
         if sim_zs.shape[0] != len(sim_time):
             raise RuntimeError("Cannot align point_zs with history time axis")
 
-        nstations = min(len(gdf), sim_zs.shape[1])
-        if nstations == 0:
+        domain = _domain_geometry(cfg)
+        eligible_station_indices = [
+            k for k, row in gdf.iterrows()
+            if k < sim_zs.shape[1] and _station_is_inside_domain(row, domain)
+        ]
+        n_outside = min(len(gdf), sim_zs.shape[1]) - len(eligible_station_indices)
+        if n_outside > 0:
+            log(
+                f"water-level evaluation: excluding {n_outside} station(s) outside "
+                "the SFINCS domain while preserving original point_zs column mapping"
+            )
+        if not eligible_station_indices:
+            log("water-level evaluation skipped: no prepared stations inside/on SFINCS domain")
             return pd.DataFrame()
 
         start = parse_time(cfg["simulation"]["start"])
@@ -739,7 +801,7 @@ def compare_model_to_water_levels(
         summary: List[Dict[str, Any]] = []
         series_for_plot = []
 
-        for k in range(nstations):
+        for k in eligible_station_indices:
             row = gdf.iloc[k]
             obs = _load_cached_obs(run, row, cfg, station_index=k)
             sim = pd.DataFrame({"time": sim_time, "sfincs_zs_m": sim_zs[:, k]})
