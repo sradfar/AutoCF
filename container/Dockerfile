@@ -9,14 +9,14 @@ ARG SFINCS_REF=v2.4.0_Galibier_release
 FROM mambaorg/micromamba:2.3.2 AS pyenv
 
 COPY --chown=$MAMBA_USER:$MAMBA_USER container/environment.yml /tmp/environment.yml
-RUN micromamba create -y -p /opt/autocf-env -f /tmp/environment.yml && \
+RUN micromamba create -y -p /opt/conda/envs/autocf -f /tmp/environment.yml && \
     micromamba clean --all --yes
 
 COPY --chown=$MAMBA_USER:$MAMBA_USER container/apply_compat_patches.py /tmp/apply_compat_patches.py
-RUN micromamba run -p /opt/autocf-env python /tmp/apply_compat_patches.py && \
-    micromamba run -p /opt/autocf-env python -m py_compile \
-      /opt/autocf-env/lib/python3.11/site-packages/hydromt/vector.py \
-      /opt/autocf-env/lib/python3.11/site-packages/hydromt_sfincs/sfincs.py
+RUN micromamba run -p /opt/conda/envs/autocf python /tmp/apply_compat_patches.py && \
+    micromamba run -p /opt/conda/envs/autocf python -m py_compile \
+      /opt/conda/envs/autocf/lib/python3.11/site-packages/hydromt/vector.py \
+      /opt/conda/envs/autocf/lib/python3.11/site-packages/hydromt_sfincs/sfincs.py
 
 # -----------------------------------------------------------------------------
 # 2) Compile SFINCS GPU/OpenACC once in a neutral NVIDIA HPC SDK image
@@ -51,7 +51,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
       libnetcdf19 libnetcdff7 ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=pyenv /opt/autocf-env /opt/autocf-env
+COPY --from=pyenv /opt/conda/envs/autocf /opt/autocf-env
 COPY --from=sfincs-builder /opt/sfincs /opt/sfincs
 
 WORKDIR /opt/autocf
