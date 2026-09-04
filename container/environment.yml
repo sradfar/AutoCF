@@ -1,0 +1,29 @@
+name: autocf
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11.15
+  - pip
+  - numpy=2.4.6
+  - pandas=2.2.3
+  - xarray=2025.4.0
+  - geopandas=1.1.4
+  - rasterio=1.4.4
+  - shapely=2.1.2
+  - pyproj=3.7.2
+  - requests=2.34.2
+  - pyyaml=6.0.3
+  - matplotlib=3.11.1
+  - hydromt=0.9.4
+  - hydromt-sfincs=1.0.3
+  - cdsapi=0.7.7
+  - netcdf4=1.7.4
+  - gdal=3.12.3
+  - pyarrow=25.0.0
+  - scipy=1.17.1
+  - dask
+  - pip:
+      - numcodecs==0.15.1
+      - zarr==2.18.7
+      - s3fs==2026.7.0
+      - overturemaps==1.0.2

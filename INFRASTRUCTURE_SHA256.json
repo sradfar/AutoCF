@@ -1,0 +1,13 @@
+{
+  ".github/workflows/build-portable-runtime.yml": "3a55b4374ddfec102d1d8053bb8edd7844277b2607ce6e5c8bb99881717ba887",
+  "README_PORTABLE_RUNTIME.md": "e5b569b493ad3613a5ac890f16d22a29613a507b0bf4cf93c67ceb23be1cf8f0",
+  "container/Dockerfile": "aa9a9c8128c7f7f4f3d869d1d9ebb8be30fa9e8b64580e8cf0775e64b780f7c3",
+  "container/README_PATCHES.md": "2d43f0b3e2940a08bd9f1a936b82c9002bcd2c593707b5a7ffa8d27c67ed4686",
+  "container/apply_compat_patches.py": "84dfbca2d8f81cc275060bb56c63aec0dc97ea55d15811647854a2b0b18d8b77",
+  "container/entrypoint.sh": "a3af8d42977c53d20c89e6911d65f374b71d4b81e17b924b560b4c7237fc2fd0",
+  "container/environment.yml": "bba5db6469e81cb16bf5211992327d726f448e9f7e357cc3081a132fa1bd6335",
+  "tests/portable/gpu_acceptance.sh": "9535c78a8f72e77cace62a126d5da8ae04e93626c4b7ba2cc90aea275da3a2d6",
+  "tests/portable/test_protected_source_hashes.py": "f83935f392db9ad19deb36c8efc3647e48bd1e335790d700ae6aa0449eb604c0",
+  "tests/portable/test_runtime.py": "4acb4efa147174c6da431c0686f10df4ec0a6a723e976c160f4c968cf12a29e8",
+  "tests/portable/test_validation_domain_rule.py": "66549a78bbcb05d2d62e65ac6b0aa77944edfd2d2abbea4aa60a039e45996066"
+}
