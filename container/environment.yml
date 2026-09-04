@@ -15,7 +15,7 @@ dependencies:
   - pyyaml=6.0.3
   - matplotlib=3.11.1
   - hydromt=0.9.4
-  - hydromt-sfincs=1.0.3
+  - hydromt_sfincs=1.0.3
   - cdsapi=0.7.7
   - netcdf4=1.7.4
   - gdal=3.12.3
