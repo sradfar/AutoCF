@@ -21,7 +21,7 @@ RUN micromamba run -p /opt/conda/envs/autocf python /tmp/apply_compat_patches.py
 # -----------------------------------------------------------------------------
 # 2) Compile SFINCS GPU/OpenACC once in a neutral NVIDIA HPC SDK image
 # -----------------------------------------------------------------------------
-FROM nvcr.io/nvidia/nvhpc:25.5-devel-cuda_multi-ubuntu22.04 AS sfincs-builder
+FROM nvcr.io/nvidia/nvhpc:25.5-devel-cuda12.9-ubuntu22.04 AS sfincs-builder
 
 ARG SFINCS_REF
 
