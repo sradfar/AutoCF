@@ -25,6 +25,8 @@ class ReleasePackagingTests(unittest.TestCase):
     def test_spec_contains_qt_webengine_and_native_targets(self) -> None:
         source = (ROOT / "packaging/autocf_desktop.spec").read_text(encoding="utf-8")
         ast.parse(source)
+        self.assertIn('root = Path(SPECPATH).resolve().parent\n', source)
+        self.assertIn("entry_script.is_file()", source)
         self.assertIn("PySide6.QtWebEngineCore", source)
         self.assertIn("qtwebengineprocess", source.lower())
         self.assertIn("BUNDLE(", source)

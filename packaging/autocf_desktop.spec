@@ -13,10 +13,15 @@ from pathlib import Path
 from PyInstaller.utils.hooks import collect_all
 
 
-root = Path(SPECPATH).resolve().parent.parent
+# PyInstaller defines SPECPATH as the directory containing this spec file.
+# The spec lives in <repository>/packaging, so its parent is the repository.
+root = Path(SPECPATH).resolve().parent
 system = platform.system().lower()
 version = os.environ.get("AUTOCF_VERSION", "1.0.0")
 product = "AutoCF-Desktop"
+entry_script = root / "windows" / "autocf_desktop_v2.py"
+if not entry_script.is_file():
+    raise FileNotFoundError(f"AutoCF entry script not found: {entry_script}")
 
 datas = []
 binaries = []
@@ -53,7 +58,7 @@ if system in {"darwin", "linux"}:
             datas.append((str(source), "autocf"))
 
 a = Analysis(
-    [str(root / "windows" / "autocf_desktop_v2.py")],
+    [str(entry_script)],
     pathex=[str(root / "windows"), str(root / "app")],
     binaries=binaries,
     datas=datas,
