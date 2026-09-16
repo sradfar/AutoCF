@@ -1,0 +1,24 @@
+# Generated desktop/release output
+/build/
+/dist/
+/packaging/AutoCF.iconset/
+/packaging/AutoCF.icns
+
+# Local model and cache output
+/cache/
+/runs/
+__pycache__/
+*.py[cod]
+
+# Managed runtime payload is published once as a GitHub release asset.
+/windows/runtime/autocf-wsl-rootfs.tar.gz
+/windows/runtime/sfincs-cpu-rootfs.tar.gz
+/windows/runtime/Transformez-Helper.exe
+/windows/runtime/wheels/
+/AutoCF-runtime-assets-*.zip
+
+# Existing generated binary and local build records
+/AutoCF-Desktop.exe
+/.codex-build/
+/.codex-build-portable/
+

@@ -1,0 +1,253 @@
+# SFINCS SUBGRID + INFILTRATION configuration
+#
+# Inherits the established regular-grid config so simulation dates, ERA5
+# conversions, NOAA/USGS settings, topobathy URLs, executable path, and GeoJSON
+# remain exactly as already configured.
+#
+# Keep this file beside sfincs_agent_config.yml.
+
+extends: sfincs_agent_config.yml
+
+model:
+  mode: subgrid
+
+project:
+  layout_version: 2
+  # IMPORTANT: use a NEW case directory. This preserves the successful
+  # no-infiltration subgrid run for direct comparison.
+  output_dir_suffix: _subgrid_infiltration
+  overwrite: false
+
+  name: tampa_helene_2024_aorc_subgrid
+subgrid:
+  nlevels: 10
+  nr_subgrid_pixels: 20
+  nrmax: 2000
+  buffer_cells: 0
+  huthresh: 0.01
+
+  manning_land: 0.04
+  manning_sea: 0.02
+  rgh_lev_land: 0.0
+
+  # Keep ESA WorldCover near native resolution for subgrid roughness.
+  landcover_output_resolution_m: 10.0
+
+  write_dep_tif: true
+  write_man_tif: true
+
+  # Forwarded only when supported by the installed HydroMT-SFINCS API.
+  q_table_option: 2
+  weight_option: min
+
+# -----------------------------------------------------------------------------
+# Rainfall infiltration
+# -----------------------------------------------------------------------------
+# Method: SCS Curve Number with recovery (SFINCS Method B)
+# Inputs : USGS Annual NLCD + USDA SSURGO HSG + SSURGO Ksat
+# Output : sfincs.smax, sfincs.seff, sfincs.ks on the 200 m computational grid
+#
+# Note: "average" below refers to the CN-II/average-condition lookup table.
+# HydroMT's separate `effective` parameter controls the initial effective soil
+# storage: seff = effective * smax. It is NOT the same parameter as the simple
+# setup_cn_infiltration(... antecedent_moisture="avg") interface.
+infiltration:
+  enabled: true
+  method: cn    # cn_with_recovery | cn
+  source: gcn250         # for method=cn_with_recovery
+  antecedent_moisture: avg
+  # Global low-friction alternative:
+  # method: cn
+  # source: gcn250
+  # antecedent_moisture: avg
+  # User CN raster alternative:
+  # method: cn
+  # source: file
+  # path: /path/to/curve_number.tif
+  # antecedent_moisture: avg
+
+  # Bundled NLCD x HSG lookup uses standard CN-II (average condition) values.
+  cn_condition: average
+
+  # Initial effective soil-storage fraction used by HydroMT:
+  # sfincs.seff = effective * sfincs.smax.
+  # Keep explicit so it can be changed for sensitivity/calibration later.
+  effective: 0.5
+  block_size: 2000
+
+  landcover:
+    source: annual_nlcd
+
+    # "simulation" automatically selects the year of simulation.start.
+    # For the current Helene case this resolves to 2024.
+    year: simulation
+
+    native_crs: EPSG:5070
+    native_resolution_m: 30
+    buffer_km: 5
+
+    # Official USGS Annual NLCD WCS.
+    wcs_base_url: https://dmsdata.cr.usgs.gov/geoserver
+    workspace: mrlc_Land-Cover-Native_conus_year_data
+    timeout_seconds: 600
+
+  soils:
+    source: ssurgo_sda
+
+    # Official USDA Soil Data Access services.
+    wfs_url: https://sdmdataaccess.sc.egov.usda.gov/Spatial/SDMWGS84Geographic.wfs
+    # WFS 1.0.0 is required here because WFS 1.1.0 returns EPSG:4326
+    # SSURGO GML with the axis order interpreted as lat/lon by this stack.
+    wfs_version: "1.0.0"
+    tabular_url: https://sdmdataaccess.sc.egov.usda.gov/Tabular/post.rest
+
+    # Spatial download/query buffering and tiling.
+    buffer_km: 5
+    wfs_tile_degrees: 0.20
+    tabular_batch_mukeys: 250
+    timeout_seconds: 180
+
+    # HSG processing. A/B/C/D -> 1/2/3/4 for HydroMT.
+    # Conservative treatment of dual groups: e.g. A/D -> D.
+    hsg_dual_policy: undrained
+    hsg_missing_group: D
+
+    # Ksat preprocessing from SSURGO chorizon.ksat_r.
+    # Agent-side modeling choice: top 30 cm, thickness-weighted harmonic mean
+    # within each component, then component-percentage weighted mapunit mean.
+    ksat_topsoil_depth_cm: 30
+    ksat_horizon_aggregation: harmonic
+
+    # Conservative fallback where SSURGO has no usable Ksat.
+    ksat_missing_um_s: 0.0
+
+    # Prepare soil rasters at 30 m; HydroMT aggregates them to the SFINCS grid.
+    raster_resolution_m: 30
+    raster_buffer_km: 3
+
+  cn_lookup:
+    # The agent auto-writes the bundled CN-II lookup table when path is null.
+    # Set path to your own CSV later if you want a calibrated/local lookup.
+    source: hec_hms_nlcd_cn_ii
+    path:
+
+workflow:
+  # Build on a LOGIN node first using "build_only".
+  # After a successful build, change only this to "run_direct_only" and use the
+  # exact same command to run SFINCS on the CPU.
+  mode: run_direct_only
+mesh:
+  type: regular
+  dx_m: 200.0
+  crs: utm
+topobathy:
+  buffer_km: 10.0
+  target_vertical_datum: NAVD88
+  datum_policy: align_gapfill
+  datum_engine: auto  # Isolated Transformez grid helper first; approximate local fallback otherwise
+  primary:
+    source: NOAA_CUDEM_1_9_ARCSEC
+    output_resolution_m: 3.0
+    vertical_datum: NAVD88
+    vrt_url: 
+      https://coast.noaa.gov/htdata/raster2/elevation/NCEI_ninth_Topobathy_2014_8483/NCEI_ninth_Topobathy_2014_m8483_EPSG-4269.vrt
+  gapfill:
+    source: GEBCO_2024_15_ARCSEC
+    output_resolution_m: 500.0
+    vertical_datum: MSL
+    cog_url: 
+      https://s3.us-west-2.amazonaws.com/us-west-2.opendata.source.coop/alexgleith/gebco-2024/GEBCO_2024.tif
+simulation:
+  event_name: Debby_2024
+  start: '2024-08-01T19:00:00Z'
+  end: '2024-08-09T10:00:00Z'
+landcover:
+  source: ESA_WorldCover_2021_v200
+  resolution_m: 10.0
+  manning_mapping: default_esa_worldcover
+forcing:
+  precipitation:
+    source: aorc
+    path: ''
+  wind:
+    source: aorc
+    path: ''
+  pressure:
+    source: none
+    path: ''
+  ocean_boundary:
+    source: noaa_coops
+    datum: NAVD
+    max_station_distance_km: 150.0
+  river:
+    source: usgs_auto
+    max_gage_distance_km: 50.0
+    max_gages: 12
+sfincs:
+  input_file: sfincs.inp
+  inputformat: bin
+  outputformat: net
+  dtout_seconds: 3600.0
+  dthisout_seconds: 360.0
+  dtmaxout_seconds: 3600.0
+  additional_parameters:
+    advection: 1
+    alpha: 0.5
+    huthresh: 0.05
+    theta: 1.0
+    qinf: 0.0
+    viscosity: 1.0
+    storecumprcp: 1
+    storevel: 0
+    storevelmax: 1
+    storefluxmax: 0
+    storetzsmax: 0
+    storemaxwind: 0
+impact:
+  analysis_resolution_m: 30.0
+  buildings:
+    enabled: true
+  roads:
+    enabled: true
+  population:
+    enabled: true
+  flood_depth_thresholds_m: &id001
+  - 0.15
+  - 0.3
+  - 0.6
+  - 1.0
+  - 2.0
+analysis:
+  enabled: true
+  attribution:
+    primary_min_depth_m: 0.1
+    depth_thresholds_m: *id001
+  exposure:
+    enabled: true
+    buildings:
+      enabled: true
+      source: overture
+    population:
+      enabled: true
+      source: worldpop
+    # Headline metrics always use absolute scenario depth. This setting is
+    # retained for the separately labelled event-depth diagnostic rasters.
+    depth_definition: excess_over_none
+  duration:
+    enabled: true
+    depth_thresholds_m: *id001
+    persistence_thresholds_hours: [6, 12, 24, 48]
+  social_vulnerability:
+    enabled: true
+    dataset: cdc_svi_2022
+    depth_thresholds_m: *id001
+  land_mask:
+    enabled: true
+    worldcover_water_classes:
+    - 80
+    min_land_fraction: 0.5
+event_catalog:
+  source: IBTrACS_v04r01
+  sid: 2024216N20284
+  basin: NA
+  season: 2024

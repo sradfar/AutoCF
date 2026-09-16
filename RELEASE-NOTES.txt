@@ -1,0 +1,179 @@
+AutoCF Windows v2.2 Docker-enabled distributable
+Built: 2026-09-11
+
+Start:
+  1. Run AutoCF-Desktop.exe.
+  2. Open AutoCF Settings and select Install / repair runtime.
+  3. Start a new model or import an existing AutoCF YAML.
+
+This package is deliberately clean. It contains no previous project workspace,
+model run, download cache, build directory, temporary YAML, or remembered active
+model. Application preferences such as theme and default project folder are stored
+per Windows user outside this package; model state is not restored at startup.
+
+Included fixes:
+  - Cancel now terminates the complete Windows job process tree, including WSL
+    children, so canceled downloads and raster writes cannot continue in the
+    background after the desktop reports that the job stopped.
+  - Terrain raster preparation now performs a deterministic memory preflight
+    for every project and region. Oversized workloads are automatically made
+    consistent with a 150-million-pixel safety budget by reducing runtime
+    subgrid sampling or selecting a standard coarser runtime mesh instead of
+    terminating with a memory-safety error. The saved YAML remains unchanged,
+    and all requested and effective settings are recorded in
+    terrain_resolution_safety.json.
+  - Atmosphere preparation now keeps project-relative runs, cache, and
+    study-area paths anchored beside the selected YAML while automatically
+    creating forcing previews. The desktop reads the resulting rainfall,
+    wind, and pressure layers without requiring the user to select generated
+    NetCDF files or refresh the map manually.
+  - Added a portable offline Riva Q&A database with 34 evidence rules, 23
+    traceable references, and 7 geographically indexed SFINCS case studies.
+    Scientific answers cite official manuals, official dataset documentation,
+    or primary peer-reviewed papers. Site-dependent questions do not claim one
+    universal best value, and loaded study-area bounds can trigger relevant
+    nearby case-study suggestions. Existing Riva workflow and deterministic
+    result answers remain available.
+  - Riva now reacts to failed AutoCF stages and setup data-service errors by
+    saying "I panicked" and showing a hand-on-heart pose for eight seconds.
+  - New project YAML files store workspace-owned runs, cache, GeoJSON, forcing,
+    and local raster paths relative to the YAML location. The Windows runtime
+    resolves them only in its temporary overlay, so projects can be moved to a
+    different user profile or computer without editing machine-specific paths.
+  - Removed developer-machine paths from the bundled subgrid example.
+  - New models now initialize all numeric controls with standard operational
+    values instead of Qt minimums, including forcing search distances, output
+    intervals, and subgrid sampling settings.
+  - Existing projects with the complete legacy placeholder fingerprint are
+    repaired automatically in the desktop and temporary runtime overlay.
+    Explicit individual zero or small values are preserved.
+  - Windows NOAA runs now restore omitted internal sampling and coverage
+    defaults without requiring users to edit project YAML files.
+  - The desktop surface-map reader now restores a missing Manning roughness map
+    layer from the existing prepared land-cover preview and Manning lookup table.
+    This is a display-only fix and does not change the scientific runtime backend.
+  - Configuration validation now has its own persistent tab in Jobs and Logs.
+    Its validation button is located inside that tab, and duplicate validation
+    buttons were removed from Project and Build and Run.
+  - The running-job response control is hidden during normal non-interactive work.
+    It appears only when process output indicates that a user response is required.
+  - Starting a new model now fills Model directory, Work directory (runs), and
+    Download cache (cache) from the folder selected by the user. It remains on
+    the Project page so those paths can be reviewed before continuing manually.
+  - Renamed the Project-page "Output directory" label to "Work directory".
+  - Edition 1 removes the redundant fixed "Mesh = regular" selector. Study Area
+    now offers standard computational cell sizes (30, 50, 100, 200, 500, and
+    1000 m) plus an explicit Custom option with visible and modal memory-risk
+    warnings. Existing nonstandard YAML values are preserved as Custom.
+  - The SFINCS choice is now labeled "Hydraulic representation" and explains
+    that regular and subgrid modes share the same regular computational grid.
+    Subgrid-only settings are disabled while regular hydraulics is selected.
+  - Fixed gap-fill datum-alignment cache signature construction, which could
+    fail after terrain preparation with "could not convert string to float".
+  - Added separate Windows, Docker, macOS Apple Silicon, and macOS Intel release
+    assembly. PyInstaller builds each native desktop on its target OS; the Mac
+    builder creates an ad-hoc-signed .app and DMG on the matching architecture.
+  - Added SFINCS Automatic/CPU/NVIDIA compute selection. Automatic mode uses a
+    GPU only when a validated GPU runtime and visible NVIDIA hardware are both
+    present; otherwise it reports and uses CPU. macOS remains CPU-only.
+  - Docker builds now bundle the isolated Transformez 0.5.1 helper and pinned
+    NOAA HTDP source without changing the Python 3.11 scientific rootfs.
+  - Rigorous Source 2 vertical-datum conversion is now available through a
+    packaged Transformez 0.5.1 helper with NOAA HTDP 3.6.0. The helper is an
+    isolated Python 3.13 executable and does not alter the validated AutoCF,
+    HydroMT, or SFINCS Python 3.11 runtime.
+  - Transformez datum resources are stored in the shared project cache and
+    reused. If the helper is inaccessible or a conversion is unsupported,
+    automatic mode retains and clearly records the approximate local fallback.
+  - Future runs use a versioned, agent-prefix-free layout with data, results,
+    metadata, logs, work, and cache responsibilities kept separate. SFINCS
+    engine files remain together under data/model/main.
+  - Results now shows only viewable PNG/JPG, CSV, and JSON products, bundles
+    matching formats into one row, and excludes rasters, NetCDF scenario files,
+    caches, logs, and other working artifacts. Existing runs remain readable.
+  - Built-in ESA WorldCover now automatically writes its public tile URL
+    template, including when repairing older YAML through the Windows runtime.
+    Its native 10 m resolution is filled by the dataset selection instead of
+    requiring manual entry; Annual NLCD similarly supplies 30 m.
+  - Built-in NOAA topobathy selection now writes its canonical VRT URL to
+    topobathy.primary.vrt_url and Windows temporary YAML preserves it.
+  - Terrain Source 1 and Source 2 expose explicit precedence; NOAA CUDEM,
+    USGS 3DEP, GEBCO 2024, and NASA Delta-X selections fill their preparation
+    resolution automatically.
+  - NASA Delta-X access opens the official Earthdata page after a privacy
+    notice. AutoCF never requests, reads, stores, or transmits credentials;
+    the user downloads the COG in the browser and selects it locally.
+  - Switching a terrain source invalidates only stale prepared terrain/model
+    state, preventing cached data from a previous ordering from being reused.
+  - Clean, traceable model layout: one event/project workspace containing the
+    YAML, study-area GeoJSON, runs, and cache below the selected working directory.
+  - Existing workspace names receive _02, _03, and later suffixes instead of
+    being overwritten; the redundant second _study_area folder is no longer made.
+  - Relative paths in imported YAML files now resolve beside that YAML instead
+    of incorrectly creating run/cache folders inside the AutoCF installation.
+  - Windows GUI can use Docker Desktop as its managed scientific backend.
+  - New-model and imported-model sessions now follow distinct workflows.
+  - Start new model now asks for its working directory and opens Event & Time;
+    Study Area is opened only after the event is applied.
+  - Selecting a storm now previews it without changing pages; the explicit
+    "Use selected event & continue" button creates the model and opens Study Area.
+  - The read-only Inspector dock was removed to return its screen space to the
+    active workflow page and map.
+  - New models select the event first, save an incomplete draft YAML, and then
+    continue automatically to Study Area.
+  - Saving YAML no longer runs final scientific validation or blocks progress
+    while a new model is incomplete; Build & Run still enforces validation.
+  - Validation opens the page that owns the first issue, such as Study Area or
+    Event & Time, instead of presenting unrelated errors during Project save.
+  - The oversized study-area preparation control is now the compact
+    "Save study area & continue" action and advances to Terrain after saving.
+  - Fresh startup and atomic project import (old maps/tracks/selections are cleared).
+  - One isolated workspace and cache per study-area/event model.
+  - Multiple adjacent HUC polygons dissolve into one AOI boundary.
+  - HUC selection now uses synchronized list/map revisions, so an older map
+    status poll cannot erase newly selected HUC IDs before they are merged.
+  - Removed stale study-area button references that could interrupt live map
+    updates after the redundant control was removed from the interface.
+  - Selected HUC IDs, result rows, and map outlines remain visible after a
+    dissolve so the merged domain is traceable and can be adjusted and rebuilt.
+  - Windows YAML inheritance paths resolve correctly inside WSL.
+  - Event choice updates workspace and event-dependent data consistently.
+  - Rainfall, wind, and pressure preparation plus map previews.
+  - Guided Attribution & Analysis workspace with separate Status, Setup,
+    Simulations, Report, and Single-run tool tabs.
+  - Active-model and analysis-state detection with a recommended next action.
+  - Absolute impacts, affected-population percentage, CDC SVI burden, flood
+    duration attribution, and Driver Impact Shift reporting.
+  - WorldPop population attribution now identifies countries from the model
+    AOI, uses Global2 v2 only (2015-2030), and rejects false API zeroes by
+    falling back to the matching official Global2 v2 country raster.
+  - CDC SVI queries now use the nationwide 2022 tract layer, including New
+    Jersey and other states outside the previously selected state service.
+  - Safe repeat preparation: completed counterfactual results are preserved
+    unless recreation is explicitly selected.
+  - Riva research assistant with bundled-document retrieval, deterministic
+    result summaries, and optional local Qwen3.5-0.8B inference through
+    llama.cpp. Riva does not send project data to an external service.
+  - Riva now answers common AutoCF workflow and terminology questions from a
+    curated knowledge source, returns concise documentation excerpts, and no
+    longer exposes unrelated HydroMT API docstrings for general questions.
+  - Natural result questions now interpret saved gauge and high-water-mark
+    evaluation, Shapley drivers, DIS, SVI burden, duration, interactions,
+    compound amplification, and single-run exposure. Qwen remains optional and
+    is used only to synthesize selected technical documentation.
+  - Riva now opens from a large bottom launcher, uses transparent header
+    labels, hides local evidence paths, and separates conversations clearly.
+  - Riva now lives in a fixed bottom-right anchor dock directly beside Jobs and
+    log. Her slower animation follows her work: idle, greeting,
+    thinking/working, and answering.
+  - Riva's anchor and chatbot now match AutoCF's standard panel palette and
+    update with the Dark, Light, and System themes.
+  - Riva's pet now uses a 16-frame 3D-rendered animation rig with independent
+    facial reactions, blinking, antenna motion, arm/hand gestures, body bounce,
+    walking legs, waving, and talking states.
+
+AutoCF-Desktop.exe SHA-256:
+  2DC79C2E0803B3438A93AE4C2F82E5C7893A8C25462B05DD8493262008FD34BC
+
+windows/runtime/Transformez-Helper.exe SHA-256:
+  FFEDAD12BBA8B74CC3F22D52CD24260154FDEA522630F9A3703384E68C658A5C

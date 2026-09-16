@@ -1,0 +1,42 @@
+FROM python:3.13-slim-bookworm AS datum-helper-builder
+
+ARG TRANSFORMEZ_VERSION=0.5.1
+ARG PYINSTALLER_VERSION=6.22.2
+ARG HTDP_COMMIT=59fdbe6b7cf5fabf79f901801ecdc33e7ca2095c
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      binutils ca-certificates git gfortran && \
+    rm -rf /var/lib/apt/lists/*
+RUN python -m pip install --no-cache-dir \
+      "transformez==${TRANSFORMEZ_VERSION}" "pyinstaller==${PYINSTALLER_VERSION}"
+RUN git clone https://github.com/noaa-ngs/HTDP.git /tmp/htdp && \
+    cd /tmp/htdp && git checkout "${HTDP_COMMIT}" && \
+    gfortran -O2 htdp.f initvl.f initeq.f initbd.f initps.f -o /usr/local/bin/htdp
+COPY windows/transformez_helper.py /tmp/transformez_helper.py
+RUN pyinstaller --noconfirm --clean --onefile \
+      --name transformez-helper \
+      --collect-all transformez --collect-all fetchez \
+      --collect-all rasterio --collect-all pyproj \
+      --collect-all fiona --collect-all pyogrio \
+      --copy-metadata transformez --copy-metadata fetchez \
+      --add-binary /usr/local/bin/htdp:. \
+      --distpath /dist --workpath /tmp/pyinstaller-work \
+      --specpath /tmp/pyinstaller-spec /tmp/transformez_helper.py && \
+    /dist/transformez-helper --version
+
+FROM scratch
+
+ADD windows/runtime/autocf-wsl-rootfs.tar.gz /
+ADD windows/runtime/sfincs-cpu-rootfs.tar.gz /opt/sfincs-cpu/rootfs/
+COPY windows/runtime/sfincs-cpu-launcher.sh /usr/local/bin/sfincs-cpu
+COPY windows/runtime/wheels /opt/autocf-wheels
+COPY --from=datum-helper-builder /dist/transformez-helper /usr/local/bin/transformez-helper
+
+RUN chmod 0755 /usr/local/bin/sfincs-cpu /usr/local/bin/transformez-helper && \
+    /usr/local/bin/python -m pip install --no-index --find-links /opt/autocf-wheels \
+      cartopy==0.25.0 pyshp==3.1.6 overturemaps==1.0.2 cdsapi==0.7.7 && \
+    printf 'AutoCF Managed Runtime 2.0\n' > /etc/autocf-release
+
+ENV PATH="/opt/autocf-gdal-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ENV AUTOCF_TRANSFORMEZ_EXECUTABLE="/usr/local/bin/transformez-helper"
+ENTRYPOINT []

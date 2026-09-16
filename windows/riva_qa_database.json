@@ -1,0 +1,582 @@
+{
+  "schema_version": 1,
+  "database_version": "2026.09.11.1",
+  "title": "Riva AutoCF and SFINCS evidence database",
+  "policy": {
+    "scope": "Offline, deterministic guidance for AutoCF, SFINCS regular and subgrid modeling, and interpretation of AutoCF settings.",
+    "evidence_rule": "Scientific guidance must cite an official manual, official dataset record, or primary peer-reviewed publication.",
+    "uncertainty_rule": "Do not present a universal best value when the evidence says the choice is site, event, scale, or calibration dependent.",
+    "locality_rule": "When study-area bounds are available, offer applicable nearby case studies as examples, not as automatic calibration values.",
+    "safety_rule": "Riva explains and recommends checks. It does not silently edit configurations, run models, or replace engineering review."
+  },
+  "references": [
+    {
+      "id": "sfincs_manual",
+      "citation": "Deltares 2026",
+      "title": "SFINCS documentation",
+      "url": "https://sfincs.readthedocs.io/en/latest/",
+      "kind": "official_manual"
+    },
+    {
+      "id": "sfincs_parameters",
+      "citation": "Deltares 2026",
+      "title": "SFINCS input parameters",
+      "url": "https://sfincs.readthedocs.io/en/latest/parameters.html",
+      "kind": "official_manual"
+    },
+    {
+      "id": "hydromt_build",
+      "citation": "Deltares 2026",
+      "title": "HydroMT-SFINCS building and updating models",
+      "url": "https://deltares.github.io/hydromt_sfincs/latest/user_guide/2_build_model/index.html",
+      "kind": "official_manual"
+    },
+    {
+      "id": "hydromt_api",
+      "citation": "Deltares 2026",
+      "title": "HydroMT-SFINCS API",
+      "url": "https://deltares.github.io/hydromt_sfincs/latest/api/api.html",
+      "kind": "official_manual"
+    },
+    {
+      "id": "leijnse_2021",
+      "citation": "Leijnse et al. 2021",
+      "title": "Modeling compound flooding in coastal systems using a computationally efficient reduced-physics solver",
+      "url": "https://doi.org/10.1016/j.coastaleng.2020.103796",
+      "kind": "peer_reviewed"
+    },
+    {
+      "id": "van_ormondt_2025",
+      "citation": "van Ormondt et al. 2025",
+      "title": "Subgrid corrections for the linear inertial equations of a compound flood model, a case study using SFINCS 2.1.1",
+      "url": "https://doi.org/10.5194/gmd-18-843-2025",
+      "kind": "peer_reviewed"
+    },
+    {
+      "id": "eilander_2023",
+      "citation": "Eilander et al. 2023",
+      "title": "A globally applicable framework for compound flood hazard modeling",
+      "url": "https://doi.org/10.5194/nhess-23-823-2023",
+      "kind": "peer_reviewed"
+    },
+    {
+      "id": "usace_roughness",
+      "citation": "USACE HEC 2026",
+      "title": "Creating land cover and Manning n layers",
+      "url": "https://www.hec.usace.army.mil/confluence/rasdocs/r2dum/latest/developing-a-terrain-model-and-geospatial-layers/creating-land-cover-mannings-n-values-and-impervious-layers",
+      "kind": "official_manual"
+    },
+    {
+      "id": "usace_unsteady",
+      "citation": "USACE 1993",
+      "title": "River Hydraulics Engineer Manual EM 1110-2-1416",
+      "url": "https://www.publications.usace.army.mil/Portals/76/Publications/EngineerManuals/EM_1110-2-1416.pdf",
+      "kind": "official_manual"
+    },
+    {
+      "id": "nrcs_cn",
+      "citation": "USDA NRCS 2004",
+      "title": "National Engineering Handbook Part 630 Chapter 9, Hydrologic Soil-Cover Complexes",
+      "url": "https://directives.nrcs.usda.gov/sites/default/files2/1712930607/7306.pdf",
+      "kind": "official_manual"
+    },
+    {
+      "id": "jaafar_2019",
+      "citation": "Jaafar et al. 2019",
+      "title": "GCN250, new global gridded curve numbers for hydrologic modeling and design",
+      "url": "https://doi.org/10.1038/s41597-019-0155-x",
+      "kind": "peer_reviewed"
+    },
+    {
+      "id": "noaa_cudem",
+      "citation": "Amante et al. 2023",
+      "title": "Continuously Updated Digital Elevation Models to support coastal inundation modeling",
+      "url": "https://repository.library.noaa.gov/view/noaa/50089/noaa_50089_DS1.pdf",
+      "kind": "government_publication"
+    },
+    {
+      "id": "usgs_3dep",
+      "citation": "USGS 2024",
+      "title": "3DEP projection, datum, and resolution guidance",
+      "url": "https://www.usgs.gov/faqs/what-projection-horizontal-datum-vertical-datum-and-resolution-a-usgs-digital-elevation-model",
+      "kind": "official_dataset_documentation"
+    },
+    {
+      "id": "gebco_2024",
+      "citation": "GEBCO Compilation Group 2024",
+      "title": "GEBCO grid documentation and vertical datum guidance",
+      "url": "https://www.gebco.net/about-us/faq",
+      "kind": "official_dataset_documentation"
+    },
+    {
+      "id": "worldcover_2021",
+      "citation": "Zanaga et al. 2022",
+      "title": "ESA WorldCover 10 m 2021 v200",
+      "url": "https://doi.org/10.5281/zenodo.7254221",
+      "kind": "official_dataset_record"
+    },
+    {
+      "id": "era5",
+      "citation": "Hersbach et al. 2020",
+      "title": "The ERA5 global reanalysis",
+      "url": "https://doi.org/10.1002/qj.3803",
+      "kind": "peer_reviewed"
+    },
+    {
+      "id": "ibtracs",
+      "citation": "Knapp et al. 2010",
+      "title": "The International Best Track Archive for Climate Stewardship",
+      "url": "https://doi.org/10.1175/2009BAMS2755.1",
+      "kind": "peer_reviewed"
+    },
+    {
+      "id": "willmott_2005",
+      "citation": "Willmott and Matsuura 2005",
+      "title": "Advantages of the mean absolute error over the root mean square error",
+      "url": "https://doi.org/10.3354/cr030079",
+      "kind": "peer_reviewed"
+    },
+    {
+      "id": "nederhoff_2024",
+      "citation": "Nederhoff et al. 2024",
+      "title": "Tropical or extratropical cyclones: what drives compound flood hazard, impact, and risk for the United States Southeast Atlantic coast?",
+      "url": "https://doi.org/10.1007/s11069-024-06552-x",
+      "kind": "peer_reviewed"
+    },
+    {
+      "id": "green_2026",
+      "citation": "Green et al. 2026",
+      "title": "A framework for modeling tropical cyclone-induced compound flooding of the continental US, demonstrated in New Orleans",
+      "url": "https://doi.org/10.1029/2025WR042016",
+      "kind": "peer_reviewed"
+    },
+    {
+      "id": "vertegaal_2026",
+      "citation": "Vertegaal et al. 2026",
+      "title": "Climate and impact attribution of compound flooding induced by Tropical Cyclone Idai in Mozambique",
+      "url": "https://doi.org/10.5194/nhess-26-1417-2026",
+      "kind": "peer_reviewed"
+    },
+    {
+      "id": "leijnse_2025_multiscale",
+      "citation": "Leijnse et al. 2025",
+      "title": "A multiscale modelling framework of coastal flooding events for global to local flood hazard assessments",
+      "url": "https://doi.org/10.5194/nhess-25-2287-2025",
+      "kind": "peer_reviewed"
+    },
+    {
+      "id": "tohoku_2021",
+      "citation": "Leijnse et al. 2021",
+      "title": "Rapid assessment of tsunami offshore propagation and inundation for the 2011 Tohoku tsunami",
+      "url": "https://doi.org/10.3390/JMSE9050453",
+      "kind": "peer_reviewed"
+    }
+  ],
+  "questions": [
+    {
+      "id": "sfincs_scope",
+      "title": "What SFINCS can model",
+      "aliases": ["what can sfincs model", "what is sfincs", "is sfincs suitable", "sfincs capabilities"],
+      "keywords": ["sfincs", "model", "capabilities", "suitable", "compound", "flood"],
+      "pages": ["sfincs", "run"],
+      "answer": "SFINCS is a computationally efficient two-dimensional reduced-physics model for flood inundation. It can combine coastal water levels, river discharge, precipitation, spatial infiltration, bed roughness, wind stress, and selected wave-related processes. Suitability still depends on whether the governing simplifications resolve the important processes at the chosen scale.",
+      "references": ["leijnse_2021", "sfincs_manual"],
+      "certainty": "supported_general_guidance"
+    },
+    {
+      "id": "regular_or_subgrid",
+      "title": "Regular versus subgrid SFINCS",
+      "aliases": ["regular or subgrid", "difference between regular and subgrid", "should i use subgrid", "which hydraulic mode"],
+      "keywords": ["regular", "subgrid", "mode", "difference", "choose"],
+      "pages": ["sfincs", "terrain"],
+      "answer": "Use regular mode when the computational grid itself resolves the terrain and flow paths needed for the question. Use subgrid mode when you need a coarser computational grid but want high-resolution elevation and roughness variability represented through precomputed lookup tables. Subgrid can improve accuracy and efficiency, but it does not rescue a grid that fails to resolve essential connectivity or river meanders.",
+      "references": ["van_ormondt_2025", "hydromt_build"],
+      "certainty": "conditional_recommendation"
+    },
+    {
+      "id": "mesh_resolution",
+      "title": "Choosing mesh cell size",
+      "aliases": ["best mesh cell size", "what cell size should i use", "choose grid resolution", "mesh resolution", "dx m"],
+      "keywords": ["mesh", "cell", "size", "resolution", "grid", "dx"],
+      "pages": ["study", "sfincs", "terrain"],
+      "answer": "There is no universal best mesh size. Choose the coarsest cell size that still resolves controlling channels, barriers, floodplain connections, and the decision scale, then run convergence or sensitivity tests with at least one finer setup. Compute cost grows rapidly as cells become smaller, so use AutoCF standard sizes as starting points and treat Custom as an expert choice that requires memory and sensitivity checks.",
+      "references": ["sfincs_manual", "van_ormondt_2025", "leijnse_2021"],
+      "certainty": "site_dependent"
+    },
+    {
+      "id": "subgrid_sampling",
+      "title": "Choosing subgrid pixels",
+      "aliases": ["best number of subgrid pixels", "nr subgrid pixels", "subgrid pixel count", "subgrid resolution"],
+      "keywords": ["subgrid", "pixels", "nr_subgrid_pixels", "sampling", "resolution"],
+      "pages": ["sfincs", "terrain"],
+      "answer": "The nominal subgrid sampling interval is mesh cell size divided by nr_subgrid_pixels. Select a count that is compatible with the source raster and the features you need to represent; sampling much finer than the source does not create new terrain information. Current HydroMT-SFINCS requires nr_subgrid_pixels to be a multiple of two. Test sensitivity because more pixels increase preprocessing memory and time.",
+      "references": ["hydromt_api", "van_ormondt_2025"],
+      "certainty": "conditional_recommendation"
+    },
+    {
+      "id": "topobathy_buffer",
+      "title": "Choosing a topobathy buffer",
+      "aliases": ["best topobathy buffer distance", "what topobathy buffer should i use", "terrain buffer", "bathymetry buffer", "buffer distance"],
+      "keywords": ["topobathy", "terrain", "bathymetry", "buffer", "distance", "best"],
+      "pages": ["terrain", "study"],
+      "answer": "There is no evidence-based universal best buffer distance. The buffer must cover every grid or interpolation footprint used to build the active domain and should include enough offshore or upstream source coverage for the chosen boundary placement. Start with the smallest distance that fully covers those needs, inspect the prepared raster edges for gaps, and increase it only when coverage or interpolation requires it. A larger buffer increases raster pixels and memory without improving cells that the model never uses.",
+      "references": ["hydromt_build", "hydromt_api", "sfincs_manual"],
+      "certainty": "site_dependent"
+    },
+    {
+      "id": "terrain_memory_error",
+      "title": "Prepared terrain raster is too large",
+      "aliases": ["prepared raster is not memory safe", "terrain out of memory", "too many raster pixels", "530937822 pixels", "topobathy memory error"],
+      "keywords": ["raster", "memory", "pixels", "terrain", "topobathy", "large", "safe"],
+      "pages": ["terrain"],
+      "answer": "This is a protective stop, not a failed download. Raster pixel count is controlled by prepared extent and useful sampling resolution. Reduce the topobathy buffer or study area, increase mesh cell size, or in subgrid mode reduce nr_subgrid_pixels. Change one item at a time and confirm that important terrain and hydraulic connections remain resolved.",
+      "references": ["hydromt_build", "van_ormondt_2025"],
+      "certainty": "software_rule_with_modeling_caution"
+    },
+    {
+      "id": "terrain_source_choice",
+      "title": "Choosing topobathy sources",
+      "aliases": ["which terrain source should i use", "best dem", "cudem or gebco", "3dep or gebco", "choose topobathy"],
+      "keywords": ["terrain", "topobathy", "dem", "cudem", "gebco", "3dep", "source"],
+      "pages": ["terrain"],
+      "answer": "Prefer the highest-quality terrain product with adequate coverage, documented acquisition dates, and a known vertical datum for the study area. In the United States, NOAA CUDEM is designed for seamless coastal topobathy and USGS 3DEP provides land elevation. GEBCO is useful for global gap filling, but its shallow-water compilation can mix source types and vertical references, so inspect source transitions and use local surveys when available.",
+      "references": ["noaa_cudem", "usgs_3dep", "gebco_2024"],
+      "certainty": "conditional_recommendation"
+    },
+    {
+      "id": "vertical_datum",
+      "title": "Why vertical datums must match",
+      "aliases": ["why must vertical datums match", "vertical datum mismatch", "navd88 versus msl", "datum problem"],
+      "keywords": ["vertical", "datum", "navd88", "msl", "mismatch", "elevation"],
+      "pages": ["terrain", "forcing", "evaluation"],
+      "answer": "Terrain elevations, bathymetry, boundary water levels, and observations must refer to a consistent vertical datum. A datum offset can appear as systematic flood-depth or water-level bias. Verify metadata and record every transformation. GEBCO is assembled assuming mean sea level but can contain other references in shallow areas, while 3DEP is typically NAVD88 in the conterminous United States.",
+      "references": ["gebco_2024", "usgs_3dep", "noaa_cudem"],
+      "certainty": "supported_general_guidance"
+    },
+    {
+      "id": "terrain_merge",
+      "title": "Merging terrain sources",
+      "aliases": ["how are terrain sources merged", "source one versus source two", "terrain priority", "gap fill terrain"],
+      "keywords": ["terrain", "merge", "priority", "source", "gap", "fill"],
+      "pages": ["terrain"],
+      "answer": "AutoCF gives Source 1 priority wherever it has valid elevations and uses Source 2 only to fill remaining gaps. Before accepting the merge, check datum consistency, resolution, acquisition period, overlap differences, seams, nodata holes, and whether channels or barriers remain physically plausible. A smooth-looking raster is not proof of datum or hydraulic consistency.",
+      "references": ["hydromt_build", "noaa_cudem", "gebco_2024"],
+      "certainty": "software_rule_with_modeling_caution"
+    },
+    {
+      "id": "boundary_placement",
+      "title": "Placing an ocean water-level boundary",
+      "aliases": ["where should ocean boundary be", "place water level boundary", "coastal boundary placement", "boundary too close"],
+      "keywords": ["ocean", "water", "level", "boundary", "placement", "coastal"],
+      "pages": ["study", "forcing"],
+      "answer": "Place water-level boundaries on hydraulically connected open water and away from the specific inundation features being evaluated when the domain permits. The terrain and bathymetry must connect the boundary to the coast without artificial ridges or nodata gaps. Confirm that forcing points lie on or near the intended boundary and that their vertical datum matches the model.",
+      "references": ["sfincs_manual", "hydromt_build", "leijnse_2021"],
+      "certainty": "site_dependent"
+    },
+    {
+      "id": "study_area_extent",
+      "title": "Choosing study-area extent",
+      "aliases": ["how large should study area be", "best domain size", "choose model domain", "study area extent"],
+      "keywords": ["study", "area", "domain", "extent", "size", "boundary"],
+      "pages": ["study"],
+      "answer": "The domain should contain the flood pathways, storage areas, forcing boundaries, and evaluation locations that affect the study question. Avoid cutting important upstream inflows, estuary storage, or coastal connections at an arbitrary administrative boundary. Expand only where added processes matter because domain area directly affects memory and run time.",
+      "references": ["sfincs_manual", "eilander_2023"],
+      "certainty": "site_dependent"
+    },
+    {
+      "id": "manning_meaning",
+      "title": "Manning roughness in AutoCF",
+      "aliases": ["what is manning roughness", "what does manning n do", "how roughness works", "manning coefficient"],
+      "keywords": ["manning", "roughness", "coefficient", "friction", "flow"],
+      "pages": ["surface", "sfincs"],
+      "answer": "Manning n represents hydraulic resistance from the bed, vegetation, land cover, and unresolved obstructions. Increasing n generally reduces conveyance and velocity and can increase water levels, but the response depends on the flow path and stage. AutoCF maps land-cover classes to n values; those values are model parameters that should be checked against local evidence and calibrated where observations exist.",
+      "references": ["usace_unsteady", "usace_roughness", "sfincs_manual"],
+      "certainty": "supported_general_guidance"
+    },
+    {
+      "id": "manning_selection",
+      "title": "Selecting Manning roughness values",
+      "aliases": ["best manning value", "choose manning n", "what roughness value should i use", "manning range"],
+      "keywords": ["manning", "roughness", "value", "range", "choose", "best"],
+      "pages": ["surface", "sfincs"],
+      "answer": "Do not choose one universal Manning n. Use land-cover-based values as initial estimates, then refine them using local channel condition, vegetation density and season, buildings, flow depth, and observed water levels or flood extents. USACE notes that roughness varies with stage and site conditions and recommends sensitivity analysis when calibration data are limited.",
+      "references": ["usace_unsteady", "usace_roughness"],
+      "certainty": "site_dependent"
+    },
+    {
+      "id": "nbs_roughness",
+      "title": "Nature-based solution roughness",
+      "aliases": ["nbs roughness", "nature based solution manning", "roughness for wetland", "roughness for forest", "roughness for vegetation"],
+      "keywords": ["nbs", "nature", "based", "solution", "manning", "roughness", "wetland", "vegetation"],
+      "pages": ["surface", "analysis"],
+      "answer": "Treat NBS roughness as a scenario range, not a guaranteed design value. USACE example ranges for appreciable-depth flow include shrub or scrub 0.07 to 0.16, deciduous forest 0.10 to 0.20, woody wetland 0.045 to 0.15, and emergent herbaceous wetland 0.05 to 0.085. These ranges are not intended for shallow overland flow, which can require higher effective values. Match the land-cover definition, vegetation state, season, and expected depth, then test low, central, and high values and compare against observations.",
+      "references": ["usace_roughness", "usace_unsteady"],
+      "certainty": "site_dependent_range"
+    },
+    {
+      "id": "mangrove_roughness",
+      "title": "Mangrove roughness",
+      "aliases": ["mangrove manning n", "mangrove roughness", "best roughness for mangrove", "manning for mangroves"],
+      "keywords": ["mangrove", "manning", "roughness", "nbs", "forest", "wetland"],
+      "pages": ["surface", "analysis"],
+      "answer": "AutoCF's ESA WorldCover default for mangroves is 0.070, but that is an initial mapping value, not a universal calibrated coefficient. Mangrove resistance varies with stem and root density, water depth, season, and whether vegetation geometry is resolved. Use the local literature or measurements when available and run a bounded sensitivity test around the default. Do not transfer a coefficient from another site without checking its vegetation and flow regime.",
+      "references": ["usace_unsteady", "usace_roughness", "worldcover_2021"],
+      "certainty": "site_dependent"
+    },
+    {
+      "id": "building_roughness",
+      "title": "Representing buildings with roughness",
+      "aliases": ["manning for buildings", "building roughness", "urban manning n", "represent buildings"],
+      "keywords": ["building", "urban", "manning", "roughness", "obstruction"],
+      "pages": ["surface"],
+      "answer": "A high roughness value is only an approximate way to represent unresolved building resistance. USACE suggests 0.25 to 0.5 where a computational face spans both buildings and conveyance area, while larger values may be used when buildings occupy their own cells. This guidance comes from a different 2D solver, so use it only as a sensitivity range and prefer explicit blocking or higher-resolution geometry when the model workflow supports it.",
+      "references": ["usace_roughness"],
+      "certainty": "transferable_range_with_caution"
+    },
+    {
+      "id": "infiltration_enable",
+      "title": "When to enable infiltration",
+      "aliases": ["should i enable infiltration", "when use infiltration", "do i need infiltration", "turn on infiltration"],
+      "keywords": ["infiltration", "enable", "rainfall", "soil", "runoff"],
+      "pages": ["surface", "forcing"],
+      "answer": "Enable infiltration when rainfall-driven runoff within the SFINCS domain materially affects flooding and suitable soil or curve-number information is available. Do not use it to replace upstream watershed runoff that should enter as river discharge. Compare enabled and disabled cases, especially for saturated tropical-cyclone events, urban impervious areas, wetlands, and regions with groundwater or drainage processes that SFINCS does not explicitly represent.",
+      "references": ["sfincs_manual", "leijnse_2021", "nrcs_cn"],
+      "certainty": "site_and_event_dependent"
+    },
+    {
+      "id": "curve_number",
+      "title": "Curve number meaning and source",
+      "aliases": ["what is cn", "what is curve number", "why no cn", "how curve number works", "where is cn"],
+      "keywords": ["cn", "curve", "number", "infiltration", "runoff", "gcn250"],
+      "pages": ["surface"],
+      "answer": "Curve number is a dimensionless rainfall-runoff parameter derived from land cover, hydrologic soil group, hydrologic condition, and antecedent moisture. Higher CN generally means less retention and more direct runoff. In AutoCF, a CN raster is prepared only when infiltration is enabled with a CN method and a valid source. GCN250 provides global 250 m dry, average, and wet antecedent-condition products; United States workflows can derive CN from NLCD and SSURGO inputs.",
+      "references": ["nrcs_cn", "jaafar_2019", "sfincs_manual"],
+      "certainty": "supported_general_guidance"
+    },
+    {
+      "id": "cn_not_visible",
+      "title": "Why the CN layer is not shown",
+      "aliases": ["why does it not show cn", "why it doesn't show cn", "why it doesn't shows cn", "cn layer missing", "curve number not visible", "no cn prepared layer"],
+      "keywords": ["cn", "curve", "number", "layer", "missing", "visible", "show"],
+      "pages": ["surface"],
+      "answer": "The CN layer appears only after spatial infiltration is enabled, a supported CN method and source are selected, and Prepare roughness / infiltration finishes successfully. If infiltration is disabled, there is intentionally no CN hydraulic input. For an older project, prepare the surface stage again after changing infiltration settings so the raster and its preview exist for the current configuration.",
+      "references": ["sfincs_manual", "nrcs_cn"],
+      "certainty": "software_rule"
+    },
+    {
+      "id": "antecedent_moisture",
+      "title": "Choosing curve-number antecedent moisture",
+      "aliases": ["dry average or wet cn", "antecedent moisture", "which gcn250 condition", "arc i ii iii"],
+      "keywords": ["antecedent", "moisture", "dry", "average", "wet", "cn", "gcn250"],
+      "pages": ["surface", "event"],
+      "answer": "Choose dry, average, or wet curve-number conditions from evidence about soil moisture before the event, not from the desired flood result. GCN250 supplies separate dry, average, and wet maps because runoff response changes with antecedent conditions. If observations are weak, use average as a documented baseline and test dry and wet bounds.",
+      "references": ["jaafar_2019", "nrcs_cn"],
+      "certainty": "event_dependent"
+    },
+    {
+      "id": "forcing_selection",
+      "title": "Choosing compound-flood forcing",
+      "aliases": ["what forcing do i need", "which flood drivers", "compound flood forcing", "rain river coast"],
+      "keywords": ["forcing", "drivers", "compound", "rain", "river", "coastal", "wind", "pressure"],
+      "pages": ["forcing", "event"],
+      "answer": "Include each driver that can materially influence the event: coastal water level, river discharge, spatial or uniform precipitation, and where supported, wind and pressure. Omitting a relevant driver can shift both flood magnitude and timing. Use consistent time zones, units, temporal coverage, and vertical datum, and include spin-up before the analysis period.",
+      "references": ["leijnse_2021", "eilander_2023", "sfincs_manual"],
+      "certainty": "event_dependent"
+    },
+    {
+      "id": "era5_use",
+      "title": "Using ERA5 forcing",
+      "aliases": ["is era5 good for forcing", "use era5", "era5 rainfall wind pressure", "era5 resolution"],
+      "keywords": ["era5", "forcing", "rainfall", "wind", "pressure", "reanalysis"],
+      "pages": ["forcing"],
+      "answer": "ERA5 is an hourly global reanalysis that can provide spatially and temporally consistent atmospheric forcing. It is not a local gauge product, and intense convective rainfall, coastal wind gradients, and terrain effects may be smoothed at its native resolution. Compare rainfall and water-level response against local observations when available, and do not interpret finer resampling as finer information.",
+      "references": ["era5", "sfincs_manual"],
+      "certainty": "dataset_guidance"
+    },
+    {
+      "id": "ibtracs_use",
+      "title": "Using IBTrACS storm tracks",
+      "aliases": ["what is ibtracs", "use storm catalog", "hurricane track source", "best track data"],
+      "keywords": ["ibtracs", "storm", "track", "hurricane", "cyclone", "catalog"],
+      "pages": ["event"],
+      "answer": "IBTrACS is a merged best-track archive used by AutoCF to select tropical-cyclone events and track metadata. Best-track records describe storm position and intensity, not the complete spatial rainfall, wind, pressure, surge, river, or wave fields needed for compound-flood simulation. Use the selected event to define timing and obtain the required forcing products separately.",
+      "references": ["ibtracs", "leijnse_2021"],
+      "certainty": "dataset_guidance"
+    },
+    {
+      "id": "spinup_tail",
+      "title": "Choosing spin-up and post-event time",
+      "aliases": ["how much spinup", "best spin up time", "pre event spinup", "tail hours", "simulation padding"],
+      "keywords": ["spinup", "spin", "tail", "hours", "time", "event", "padding"],
+      "pages": ["event", "forcing"],
+      "answer": "There is no universal spin-up or tail duration. Start early enough for boundary levels and stored water to become dynamically consistent before the event signal reaches the area of interest, and end late enough to capture the peak and recession needed for evaluation. Verify this by plotting water levels and checking that the event peak is not clipped by either time boundary.",
+      "references": ["sfincs_manual", "leijnse_2021"],
+      "certainty": "domain_and_event_dependent"
+    },
+    {
+      "id": "advection",
+      "title": "When to enable advection",
+      "aliases": ["should advection be enabled", "what does advection do", "advection setting", "advection 0 or 1"],
+      "keywords": ["advection", "momentum", "waves", "dam", "break", "setting"],
+      "pages": ["sfincs"],
+      "answer": "Advection adds momentum transport omitted by the local-inertial formulation. The SFINCS model paper found it necessary for shock flows such as dam breaks and for incident broken waves. For ordinary long-wave overland flooding, test whether its added physics changes the quantities of interest and follow the SFINCS version documentation for compatible settings.",
+      "references": ["leijnse_2021", "sfincs_parameters"],
+      "certainty": "process_dependent"
+    },
+    {
+      "id": "wet_dry_threshold",
+      "title": "Choosing the wet/dry threshold",
+      "aliases": ["best huthresh", "wet dry threshold", "minimum flow depth", "huthresh setting"],
+      "keywords": ["huthresh", "wet", "dry", "threshold", "depth", "stability"],
+      "pages": ["sfincs"],
+      "answer": "The wet/dry threshold is a numerical control, not a reporting flood-depth threshold. Use the documented SFINCS range and test sensitivity if shallow sheet flow is important. A larger value can suppress very shallow movement and improve robustness; a smaller value can retain shallow connectivity but may increase numerical work or instability. Do not tune it only to match a desired flood extent.",
+      "references": ["sfincs_parameters", "sfincs_manual"],
+      "certainty": "model_and_scale_dependent"
+    },
+    {
+      "id": "output_interval",
+      "title": "Choosing SFINCS output intervals",
+      "aliases": ["best output interval", "dtout", "dthisout", "map output interval", "history output interval"],
+      "keywords": ["output", "interval", "dtout", "dthisout", "map", "history", "time"],
+      "pages": ["sfincs", "evaluation"],
+      "answer": "Choose map and history output intervals fine enough to resolve the peak timing and duration needed by the analysis. Coarser output reduces disk use but can miss a short peak or bias duration-above-threshold calculations. Output interval is different from the internal adaptive computation time step. Check the SFINCS parameter documentation and perform a temporal-output sensitivity test for rapidly varying events.",
+      "references": ["sfincs_parameters", "sfincs_manual"],
+      "certainty": "analysis_dependent"
+    },
+    {
+      "id": "calibration",
+      "title": "Calibrating an AutoCF SFINCS model",
+      "aliases": ["how to calibrate sfincs", "calibrate model", "what should i calibrate", "model calibration"],
+      "keywords": ["calibrate", "calibration", "roughness", "water", "level", "extent", "observations"],
+      "pages": ["evaluation", "surface", "sfincs"],
+      "answer": "Calibrate against independent observations that represent the modeled processes, such as gauge hydrographs, high-water marks, and observed flood extents. First resolve datum, timing, forcing, terrain, and boundary errors; do not use Manning n to compensate for those problems. Adjust physically defensible parameters within documented ranges, compare several metrics, and reserve separate data or events for validation.",
+      "references": ["usace_unsteady", "leijnse_2021"],
+      "certainty": "supported_general_guidance"
+    },
+    {
+      "id": "validation_metrics",
+      "title": "Interpreting validation metrics together",
+      "aliases": ["which validation metric is best", "rmse or mae", "how to validate flood model", "interpret metrics"],
+      "keywords": ["validation", "metric", "rmse", "mae", "bias", "correlation", "peak"],
+      "pages": ["evaluation", "results"],
+      "answer": "No single validation metric proves model skill. Use MAE and RMSE for error magnitude, bias for systematic offset, correlation for co-variation, peak error and peak timing for event behavior, and spatial extent or high-water marks where available. RMSE weights large errors more strongly than MAE, so report both and inspect plots, sample count, observation coverage, and datum consistency.",
+      "references": ["willmott_2005", "leijnse_2021"],
+      "certainty": "supported_general_guidance"
+    },
+    {
+      "id": "sensitivity_uncertainty",
+      "title": "Minimum sensitivity analysis",
+      "aliases": ["what sensitivity tests should i run", "model uncertainty", "parameter uncertainty", "how many scenarios"],
+      "keywords": ["sensitivity", "uncertainty", "scenario", "parameter", "test", "range"],
+      "pages": ["sfincs", "evaluation", "analysis"],
+      "answer": "At minimum, test the uncertain choices most able to alter the decision: mesh or subgrid resolution, terrain source and datum treatment, roughness, infiltration or antecedent moisture, boundary forcing, and event timing. Change one factor at a time for diagnosis, then test plausible combinations for decision bounds. Report the ranges and evidence used rather than only the preferred run.",
+      "references": ["usace_unsteady", "van_ormondt_2025", "eilander_2023"],
+      "certainty": "supported_general_guidance"
+    },
+    {
+      "id": "subgrid_limits",
+      "title": "Subgrid limitations",
+      "aliases": ["limitations of subgrid", "subgrid problems", "when not to use subgrid", "subgrid river meanders"],
+      "keywords": ["subgrid", "limitations", "river", "meander", "connectivity", "accuracy"],
+      "pages": ["sfincs", "terrain"],
+      "answer": "Subgrid corrections represent within-cell bed levels and friction through lookup tables, but coarse grid-face geometry still controls how water moves between cells. The SFINCS subgrid study reports that inadequately resolved river meanders can overestimate fluxes. Inspect narrow channels, barriers, culverts, and crossings, and refine the computational grid or represent structures explicitly when connectivity is not preserved.",
+      "references": ["van_ormondt_2025"],
+      "certainty": "supported_limitation"
+    },
+    {
+      "id": "compound_driver_attribution",
+      "title": "Interpreting compound-flood drivers",
+      "aliases": ["which flood driver matters", "coastal rain river interaction", "compound flood attribution", "dominant driver"],
+      "keywords": ["compound", "driver", "coastal", "precipitation", "river", "interaction", "attribution"],
+      "pages": ["analysis", "results"],
+      "answer": "Driver importance is event, location, threshold, and impact dependent. Run consistent counterfactual scenarios with the same grid, terrain, roughness, and numerical settings so differences reflect forcing. Interpret the full-event hazard separately from incremental attribution, and inspect interactions because the combined response need not equal the sum of single-driver responses.",
+      "references": ["eilander_2023", "nederhoff_2024", "leijnse_2021"],
+      "certainty": "event_and_location_dependent"
+    },
+    {
+      "id": "prepared_inputs",
+      "title": "When prepared inputs must be refreshed",
+      "aliases": ["do i need to prepare again", "when rebuild terrain", "refresh roughness", "stale prepared files"],
+      "keywords": ["prepare", "prepared", "refresh", "rebuild", "stale", "terrain", "roughness", "forcing"],
+      "pages": ["terrain", "surface", "forcing", "run"],
+      "answer": "Prepare a stage again after changing any setting that controls its source, extent, resolution, datum, classification, or time coverage. AutoCF can reuse cached inputs only when they match the active configuration. Before a final run, inspect the prepared previews and provenance rather than relying only on file existence.",
+      "references": ["hydromt_build", "sfincs_manual"],
+      "certainty": "software_rule"
+    },
+    {
+      "id": "local_case_papers",
+      "title": "Finding evidence near the study area",
+      "aliases": ["papers near my study area", "local sfincs paper", "nearby case study", "relevant paper for this location"],
+      "keywords": ["paper", "study", "area", "near", "nearby", "local", "evidence", "case"],
+      "pages": [],
+      "answer": "Riva can compare the loaded study-area bounds with its indexed SFINCS case studies and show nearby examples. A nearby paper is evidence that a workflow has been applied in a related setting, not proof that its mesh, buffer, roughness, or forcing values are correct for this model. Prefer a case with similar flood drivers, terrain, scale, and observation data, then verify every transferred assumption.",
+      "references": ["eilander_2023", "nederhoff_2024", "van_ormondt_2025"],
+      "certainty": "evidence_navigation"
+    }
+  ],
+  "case_studies": [
+    {
+      "id": "jacksonville_florida",
+      "name": "Jacksonville, Florida, United States",
+      "center": [-81.66, 30.33],
+      "radius_km": 900,
+      "topics": ["compound", "coastal", "river", "rain", "wind", "regular"],
+      "summary": "SFINCS verification and application case combining fluvial, pluvial, tidal, and wind-driven flooding.",
+      "references": ["leijnse_2021"]
+    },
+    {
+      "id": "southeast_atlantic_us",
+      "name": "United States Southeast Atlantic coast",
+      "center": [-79.5, 31.5],
+      "radius_km": 1200,
+      "topics": ["compound", "coastal", "river", "rain", "tropical cyclone", "validation"],
+      "summary": "Regional SFINCS study with detailed Hurricane Florence validation using gauges and high-water marks.",
+      "references": ["nederhoff_2024"]
+    },
+    {
+      "id": "new_orleans_us",
+      "name": "New Orleans, Louisiana, United States",
+      "center": [-90.07, 29.95],
+      "radius_km": 900,
+      "topics": ["compound", "coastal", "river", "rain", "subgrid", "resolution"],
+      "summary": "Continental United States compound-flood framework demonstrated in New Orleans using a 200 m SFINCS grid and 10 m subgrid data.",
+      "references": ["green_2026"]
+    },
+    {
+      "id": "sofala_mozambique",
+      "name": "Sofala Province, Mozambique",
+      "center": [34.9, -19.8],
+      "radius_km": 1600,
+      "topics": ["compound", "coastal", "river", "rain", "subgrid", "tropical cyclone"],
+      "summary": "Tropical Cyclone Idai compound-flood attribution using SFINCS with merged global topobathy and subgrid corrections.",
+      "references": ["vertegaal_2026", "eilander_2023"]
+    },
+    {
+      "id": "hernani_philippines",
+      "name": "Hernani, Philippines",
+      "center": [125.62, 11.33],
+      "radius_km": 1500,
+      "topics": ["coastal", "wave", "advection", "tropical cyclone"],
+      "summary": "SFINCS application used to evaluate incident broken-wave flooding and the role of advection.",
+      "references": ["leijnse_2021", "leijnse_2025_multiscale"]
+    },
+    {
+      "id": "xynthia_france",
+      "name": "Atlantic coast of France, Cyclone Xynthia",
+      "center": [-1.2, 46.2],
+      "radius_km": 1400,
+      "topics": ["coastal", "multiscale", "surge", "validation"],
+      "summary": "Global-to-local coastal flood framework including a SFINCS application for Xynthia.",
+      "references": ["leijnse_2025_multiscale"]
+    },
+    {
+      "id": "tohoku_japan",
+      "name": "Tohoku, Japan",
+      "center": [141.5, 38.3],
+      "radius_km": 1800,
+      "topics": ["tsunami", "coastal", "advection", "rapid assessment"],
+      "summary": "Rapid offshore propagation and inundation assessment for the 2011 Tohoku tsunami using D-Flow Flexible Mesh and SFINCS.",
+      "references": ["tohoku_2021"]
+    }
+  ]
+}

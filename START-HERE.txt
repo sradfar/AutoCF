@@ -1,0 +1,7 @@
+AutoCF platform package
+Platform: Windows
+Architecture: x86_64
+
+Copy this entire folder to a local Windows drive and run AutoCF-Desktop.exe. In AutoCF Settings, keep Managed WSL2 selected and choose Install / repair runtime. Restart Windows only if AutoCF requests it, then reopen the application and finish installation. No separate Python, Conda, HydroMT, GDAL, or SFINCS installation is required. Internet access is still needed when a model downloads provider data. Automatic compute uses the bundled CPU/OpenMP runtime unless a separately validated GPU payload is installed.
+
+SFINCS computation remains inside the validated Linux scientific runtime.

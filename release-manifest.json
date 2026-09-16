@@ -1,0 +1,32 @@
+{
+  "product": "AutoCF Desktop",
+  "release_line": "2.2",
+  "variant": "windows",
+  "platform": "Windows",
+  "architecture": "x86_64",
+  "assembled_utc": "2026-09-16T00:31:06.4120691Z",
+  "desktop_binary_included": true,
+  "scientific_runtime": "Linux CPU/OpenMP",
+  "gpu_policy": "validated-payload-only; CPU fallback",
+  "validated_gpu_payload_included": false,
+  "critical_sha256": {
+    "windows/runtime/autocf-wsl-rootfs.tar.gz": "E91C91229FFBBD4D14FB9917F0753BF58F5AEB2C01138EF3B0D13CC81CB6777F",
+    "windows/runtime/sfincs-cpu-rootfs.tar.gz": "456B7C3F07A01A8C505EF676DF6C729EF3C0661B4FBC823A2B62773C7BDE0625",
+    "windows/runtime/sfincs-cpu-launcher.sh": "138C67B037BF3DC6974B61D00BEDF64B2B0F10A493535230DF96006D6E83D3A8",
+    "AutoCF-Desktop.exe": "42E12A0FC51837045A79079C7E15D0E799ACD260F936FF6D5F4967CC079D6826",
+    "windows/runtime/Transformez-Helper.exe": "FFEDAD12BBA8B74CC3F22D52CD24260154FDEA522630F9A3703384E68C658A5C"
+  },
+  "macos_binary_status": null,
+  "checksum_file": "SHA256SUMS.txt",
+  "checksummed_file_count": 95,
+  "desktop_binary_bytes": 189311841,
+  "desktop_update": [
+    "Removed regional Delta-X download button",
+    "300 dpi framed map PNG export",
+    "Forcing-panel point autosave",
+    "Ordered additional terrain sources",
+    "GeoPandas-compatible CN-with-recovery preparation",
+    "Current-mode surface previews with stale-preview invalidation",
+    "Land-only curve-number coverage reporting"
+  ]
+}

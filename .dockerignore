@@ -1,0 +1,11 @@
+**
+!host/
+!host/Dockerfile.runtime
+!windows/
+!windows/transformez_helper.py
+!windows/runtime/
+!windows/runtime/autocf-wsl-rootfs.tar.gz
+!windows/runtime/sfincs-cpu-rootfs.tar.gz
+!windows/runtime/sfincs-cpu-launcher.sh
+!windows/runtime/wheels/
+!windows/runtime/wheels/**
