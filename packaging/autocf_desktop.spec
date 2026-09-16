@@ -27,10 +27,17 @@ datas = []
 binaries = []
 hiddenimports = []
 
-qt_datas, qt_binaries, qt_hidden = collect_all("PySide6")
-datas += qt_datas
-binaries += qt_binaries
-hiddenimports += qt_hidden
+# On Windows/Linux, preserve the broad collection used by the tested edition2
+# package. On macOS, collecting the whole PySide6 distribution also captures
+# Qt development applications (Assistant.app, Designer.app, and tools). Those
+# unrelated nested apps break hardened-runtime signing. PyInstaller's PySide6
+# module hooks below collect the required frameworks, plugins, translations,
+# WebEngine helper, and Chromium resources without the development tools.
+if system != "darwin":
+    qt_datas, qt_binaries, qt_hidden = collect_all("PySide6")
+    datas += qt_datas
+    binaries += qt_binaries
+    hiddenimports += qt_hidden
 
 # The UI imports these modules lazily on some code paths.
 hiddenimports += [
