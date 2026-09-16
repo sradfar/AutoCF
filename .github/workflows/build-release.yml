@@ -79,7 +79,7 @@ jobs:
         run: python -m unittest tests.test_release_packaging -v
 
       - name: Configure Apple Developer signing and notarization
-        if: runner.os == 'macOS' && secrets.APPLE_CERTIFICATE_BASE64 != ''
+        if: runner.os == 'macOS'
         shell: bash
         env:
           APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
@@ -88,6 +88,10 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
         run: |
+          if [[ -z "$APPLE_CERTIFICATE_BASE64" ]]; then
+            echo "Apple certificate secret is not configured; producing an ad-hoc-signed tester DMG."
+            exit 0
+          fi
           CERTIFICATE_PATH="$RUNNER_TEMP/autocf-developer-id.p12"
           KEYCHAIN_PATH="$RUNNER_TEMP/autocf-signing.keychain-db"
           KEYCHAIN_PASSWORD="$(openssl rand -hex 24)"
@@ -102,12 +106,12 @@ jobs:
           xcrun notarytool store-credentials autocf-notary \
             --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" \
             --password "$APPLE_APP_PASSWORD" --keychain "$KEYCHAIN_PATH"
+          echo "APPLE_NOTARY_PROFILE=autocf-notary" >> "$GITHUB_ENV"
 
       - name: Build and smoke-test native package
         shell: bash
         env:
-          AUTOCF_CODESIGN_IDENTITY: ${{ runner.os == 'macOS' && secrets.APPLE_SIGNING_IDENTITY || '' }}
-          APPLE_NOTARY_PROFILE: ${{ runner.os == 'macOS' && secrets.APPLE_CERTIFICATE_BASE64 != '' && 'autocf-notary' || '' }}
+          AUTOCF_CODESIGN_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: ${{ matrix.command }}
 
       - name: Verify release artifact
