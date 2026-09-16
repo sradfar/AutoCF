@@ -149,6 +149,21 @@ def container_path(path: Path, root: Path) -> tuple[str, list[str]]:
         return "/project/" + path.name, ["-v", f"{path.parent}:/project"]
 
 
+def packaged_python_entry(root: Path, relative_stem: str) -> str:
+    """Return the mounted container path for a packaged Python entry point.
+
+    Development checkouts retain readable ``.py`` files. Sanitized releases
+    contain Python 3.11 sourceless bytecode compiled for the managed runtime.
+    """
+    for suffix in (".pyc", ".py"):
+        candidate = root / f"{relative_stem}{suffix}"
+        if candidate.is_file():
+            return f"/workspace/{relative_stem}{suffix}"
+    raise FileNotFoundError(
+        f"Required AutoCF runtime module is missing: {relative_stem} (.pyc or .py)"
+    )
+
+
 def mirrored_container_target(path: Path, system: str | None = None) -> str:
     """Return the container path used when preserving an absolute host path.
 
@@ -238,15 +253,25 @@ def execute(root: Path, options: dict[str, str | bool]) -> int:
         *extra_mount, *mirrored, *cds_mount, "-w", "/workspace", *environment, IMAGE,
     ]
     command[-1] = runtime_image
+    try:
+        runtime_entry = packaged_python_entry(root, "windows/autocf_runtime")
+        agent_entry = packaged_python_entry(root, "app/sfincs_agent")
+        eval_entry = packaged_python_entry(root, "app/sfincs_eval")
+        impact_entry = packaged_python_entry(root, "app/sfincs_impact")
+        preview_entry = packaged_python_entry(root, "app/sfincs_forcing_preview")
+        attribution_entry = packaged_python_entry(root, "app/sfincs_attribution")
+    except FileNotFoundError as exc:
+        print(str(exc))
+        return 2
     if action == "run":
         command += [
-            "/usr/local/bin/python", "-u", "/workspace/windows/autocf_runtime.py",
-            "--app", "/workspace/app/sfincs_agent.py", "--config", config,
+            "/usr/local/bin/python", "-u", runtime_entry,
+            "--app", agent_entry, "--config", config,
             "--mode", str(options.get("mode", "full")),
         ]
     elif action == "evaluate":
         command += [
-            "/usr/local/bin/python", "-u", "/workspace/app/sfincs_eval.py",
+            "/usr/local/bin/python", "-u", eval_entry,
             "--config", config, "--tolerance-min", str(options.get("evaluationtoleranceminutes", "4")),
             "--hmax-vmax", str(options.get("evaluationhmaxvmax", "3")),
         ]
@@ -254,7 +279,7 @@ def execute(root: Path, options: dict[str, str | bool]) -> int:
         if options.get("skipevaluationobservations"): command.append("--skip-observations")
     elif action == "impact":
         command += [
-            "/usr/local/bin/python", "-u", "/workspace/app/sfincs_impact.py",
+            "/usr/local/bin/python", "-u", impact_entry,
             "--config", config, "--thresholds-m", str(options.get("impactthresholds", "0.15,0.3,0.6,1.0,2.0")),
             "--analysis-resolution-m", str(options.get("impactanalysisresolution", "30")),
         ]
@@ -264,7 +289,7 @@ def execute(root: Path, options: dict[str, str | bool]) -> int:
         if options.get("forceimpactdownloads"): command.append("--force-downloads")
     elif action == "forcingpreview":
         command += [
-            "/usr/local/bin/python", "-u", "/workspace/app/sfincs_forcing_preview.py",
+            "/usr/local/bin/python", "-u", preview_entry,
             "--config", config,
         ]
     elif action in {
@@ -277,7 +302,7 @@ def execute(root: Path, options: dict[str, str | bool]) -> int:
             "analysisreport": "report",
         }[action]
         command += [
-            "/usr/local/bin/python", "-u", "/workspace/app/sfincs_attribution.py",
+            "/usr/local/bin/python", "-u", attribution_entry,
             "--config", config, analysis_command,
         ]
         if options.get("forceanalysis") and analysis_command in {"prepare", "prepare-exposure", "run"}:

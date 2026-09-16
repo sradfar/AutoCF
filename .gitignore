@@ -1,6 +1,10 @@
 # Generated desktop/release output
 /build/
 /dist/
+/dist-rc2/
+/.codex-build-rc2/
+/dist-macos-rc3/
+/.codex-build-macos-rc3/
 /packaging/AutoCF.iconset/
 /packaging/AutoCF.icns
 

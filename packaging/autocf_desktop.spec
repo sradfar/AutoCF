@@ -16,6 +16,7 @@ from PyInstaller.utils.hooks import collect_all
 # PyInstaller defines SPECPATH as the directory containing this spec file.
 # The spec lives in <repository>/packaging, so its parent is the repository.
 root = Path(SPECPATH).resolve().parent
+payload_root = Path(os.environ.get("AUTOCF_PAYLOAD_ROOT", str(root))).resolve()
 system = platform.system().lower()
 version = os.environ.get("AUTOCF_VERSION", "1.0.0")
 product = "AutoCF-Desktop"
@@ -56,11 +57,11 @@ hiddenimports += [
 # are deliberately not packaged.
 if system in {"darwin", "linux"}:
     for directory in ("app", "windows", "host", "vendor", "data", "examples", "logo"):
-        source = root / directory
+        source = payload_root / directory
         if source.is_dir():
             datas.append((str(source), f"autocf/{directory}"))
     for filename in ("README.md", "RELEASE-NOTES.txt", "START-HERE.txt"):
-        source = root / filename
+        source = payload_root / filename
         if source.is_file():
             datas.append((str(source), "autocf"))
 

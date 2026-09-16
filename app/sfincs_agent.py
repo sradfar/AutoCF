@@ -4057,6 +4057,68 @@ def prepare_validation_observations(cfg: Dict[str, Any], geo_meta: Dict[str, Any
         return loc
     raise RuntimeError(f"Unsupported evaluation.observations.source={source!r}; use noaa_coops, file, or none")
 
+
+def filter_observation_locations_to_domain(
+    obs_locs: Optional[Path], domain_path: Path,
+) -> Optional[Path]:
+    """Return model-ready observations, or None when none intersect the domain.
+
+    HydroMT treats a supplied-but-empty observation layer as a fatal no-data
+    error. AutoCF can legitimately reach that state when a valid GeoJSON is
+    empty or every selected gauge lies outside the final model polygon.
+    """
+    if obs_locs is None or not Path(obs_locs).is_file():
+        return None
+    obs_locs = Path(obs_locs)
+    try:
+        observations = gpd.read_file(obs_locs)
+    except Exception as exc:
+        document = read_json(obs_locs, {})
+        if document.get("type") == "FeatureCollection" and not document.get("features"):
+            log("Observation points skipped: the selected GeoJSON contains no features.")
+            return None
+        raise RuntimeError(f"Could not read observation locations {obs_locs}: {exc}") from exc
+    if observations.empty:
+        log("Observation points skipped: the selected GeoJSON contains no features.")
+        return None
+
+    original_crs = observations.crs
+    if original_crs is None:
+        observations = observations.set_crs(4326)
+        original_crs = observations.crs
+    valid = observations.geometry.notna() & ~observations.geometry.is_empty
+    observations = observations.loc[valid].copy()
+    if observations.empty:
+        log("Observation points skipped: all selected geometries are empty.")
+        return None
+
+    domain = gpd.read_file(domain_path)
+    if domain.empty:
+        raise RuntimeError(f"Model domain contains no polygon features: {domain_path}")
+    if domain.crs is None:
+        domain = domain.set_crs(4326)
+    in_domain_crs = observations.to_crs(domain.crs)
+    domain_geometry = unary_union(domain.geometry)
+    keep = in_domain_crs.geometry.intersects(domain_geometry).to_numpy()
+    filtered = observations.loc[keep].copy()
+    excluded = len(observations) - len(filtered)
+    if filtered.empty:
+        log(
+            "Observation points skipped: no selected gauge intersects the final "
+            f"model domain ({excluded} outside)."
+        )
+        return None
+    if excluded:
+        # Synchronize the canonical file with the point order actually passed
+        # to SFINCS so sfincs_his.nc and later evaluation remain aligned.
+        filtered = filtered.to_crs(original_crs)
+        filtered.to_file(obs_locs, driver="GeoJSON")
+        log(
+            f"Observation points: excluded {excluded} outside the final model "
+            f"domain; retaining {len(filtered)}."
+        )
+    return obs_locs
+
 # -----------------------------------------------------------------------------
 # ERA5
 # -----------------------------------------------------------------------------
@@ -4074,6 +4136,10 @@ def era5_artifact_paths(
         bbox, start.isoformat(), forcing_end.isoformat(),
         acfg.get("cds_dataset", ""),
         json.dumps(acfg.get("variables", {}), sort_keys=True, default=str),
+        # Cache schema v2 requests each calendar month separately.  The old
+        # request used independent month/day lists; across a month boundary
+        # CDS formed their Cartesian product and returned unrelated dates.
+        "exact-calendar-days-v2",
     )
     period = f"{start:%Y%m%d%H}_{forcing_end:%Y%m%d%H}"
     return (
@@ -4082,6 +4148,27 @@ def era5_artifact_paths(
         paths.data_file("forcing", f"era5_{period}_{era_signature}_wind_pressure_pa.nc"),
         paths.data_file("forcing", f"era5_{period}_{era_signature}_precip_mm_cumulative.nc"),
     )
+
+
+def era5_calendar_request_groups(dates: pd.DatetimeIndex) -> List[Dict[str, List[str]]]:
+    """Return exact CDS year/month/day requests without calendar cross-products.
+
+    CDS treats separate ``month`` and ``day`` arrays as a Cartesian product.
+    A request spanning 22 September through 1 October must therefore be split
+    into September 22--30 and October 1, rather than requesting months 09/10
+    with days 01/22/.../30.
+    """
+    normalized = pd.DatetimeIndex(dates).normalize().unique().sort_values()
+    groups: List[Dict[str, List[str]]] = []
+    for (year, month), members in normalized.to_series().groupby(
+        [normalized.year, normalized.month]
+    ):
+        groups.append({
+            "year": [str(int(year))],
+            "month": [f"{int(month):02d}"],
+            "day": [f"{int(day):02d}" for day in members.dt.day],
+        })
+    return groups
 
 
 def download_era5(cfg: Dict[str, Any], geo_meta: Dict[str, Any], paths: Paths) -> Tuple[Path, Path]:
@@ -4130,9 +4217,7 @@ def download_era5(cfg: Dict[str, Any], geo_meta: Dict[str, Any], paths: Paths) -
             "ERA5 forcing coverage: extending through the next complete UTC hour "
             f"({forcing_end.isoformat()}) to bracket simulation tstop {end.isoformat()}."
         )
-    years = sorted(set(str(d.year) for d in dates))
-    months = sorted(set(f"{d.month:02d}" for d in dates))
-    days = sorted(set(f"{d.day:02d}" for d in dates))
+    calendar_groups = era5_calendar_request_groups(dates)
     hours = [f"{h:02d}:00" for h in range(24)]
 
     try:
@@ -4147,30 +4232,81 @@ def download_era5(cfg: Dict[str, Any], geo_meta: Dict[str, Any], paths: Paths) -
         ) from exc
     common = {
         "product_type": ["reanalysis"],
-        "year": years,
-        "month": months,
-        "day": days,
         "time": hours,
         "area": [north, west, south, east],
         "data_format": "netcdf",
         "download_format": "unarchived",
     }
-    if not file_ready(raw_ws, 1024):
-        log("Downloading ERA5 wind and pressure from CDS")
-        c.retrieve(acfg["cds_dataset"], {**common, "variable": [
-            acfg["variables"]["wind_u"]["era5_name"],
-            acfg["variables"]["wind_v"]["era5_name"],
-            acfg["variables"]["pressure"]["era5_name"],
-        ]}, str(raw_ws))
-    else:
-        log(f"Reusing ERA5 wind/pressure: {raw_ws}")
-    if not file_ready(raw_tp, 1024):
-        log("Downloading ERA5 precipitation from CDS")
-        c.retrieve(acfg["cds_dataset"], {**common, "variable": [
-            acfg["variables"]["precipitation"]["era5_name"],
-        ]}, str(raw_tp))
-    else:
-        log(f"Reusing ERA5 precipitation: {raw_tp}")
+
+    def retrieve_exact_calendar_days(
+        target: Path, variables: List[str], label: str
+    ) -> None:
+        if file_ready(target, 1024):
+            log(f"Reusing ERA5 {label}: {target}")
+            return
+        log(f"Downloading ERA5 {label} from CDS")
+        if len(calendar_groups) == 1:
+            c.retrieve(
+                acfg["cds_dataset"],
+                {**common, **calendar_groups[0], "variable": variables},
+                str(target),
+            )
+            return
+
+        part_paths: List[Path] = []
+        datasets = []
+        try:
+            for group in calendar_groups:
+                period = f"{group['year'][0]}{group['month'][0]}"
+                part = target.with_name(f"{target.stem}_{period}{target.suffix}")
+                part_paths.append(part)
+                if not file_ready(part, 1024):
+                    log(
+                        f"ERA5 {label}: requesting {group['year'][0]}-"
+                        f"{group['month'][0]} days {','.join(group['day'])}"
+                    )
+                    c.retrieve(
+                        acfg["cds_dataset"],
+                        {**common, **group, "variable": variables},
+                        str(part),
+                    )
+                else:
+                    log(f"Reusing ERA5 monthly part: {part}")
+
+            datasets = [xr.open_dataset(part).load() for part in part_paths]
+            time_name = next(
+                (name for name in ("valid_time", "time") if name in datasets[0].coords),
+                None,
+            )
+            if time_name is None:
+                raise RuntimeError(
+                    f"ERA5 {label} response has no valid_time/time coordinate"
+                )
+            combined = xr.concat(datasets, dim=time_name).sortby(time_name)
+            combined_times = pd.DatetimeIndex(
+                pd.to_datetime(combined[time_name].values)
+            )
+            if combined_times.has_duplicates:
+                combined = combined.isel(
+                    {time_name: np.flatnonzero(~combined_times.duplicated())}
+                )
+            temporary = target.with_suffix(target.suffix + ".partial")
+            if temporary.exists():
+                temporary.unlink()
+            combined.to_netcdf(temporary)
+            temporary.replace(target)
+        finally:
+            for dataset in datasets:
+                dataset.close()
+
+    retrieve_exact_calendar_days(raw_ws, [
+        acfg["variables"]["wind_u"]["era5_name"],
+        acfg["variables"]["wind_v"]["era5_name"],
+        acfg["variables"]["pressure"]["era5_name"],
+    ], "wind and pressure")
+    retrieve_exact_calendar_days(raw_tp, [
+        acfg["variables"]["precipitation"]["era5_name"],
+    ], "precipitation")
 
     def process(infile: Path, outfile: Path, keys: List[str]) -> None:
         if file_ready(outfile, 1024):
@@ -4202,6 +4338,14 @@ def download_era5(cfg: Dict[str, Any], geo_meta: Dict[str, Any], paths: Paths) -
         out = ds[keep]
         if "valid_time" in out.coords:
             out = out.rename({"valid_time": "time"})
+        # Retain only the bracketing hourly forcing window.  The preceding
+        # complete hour is required when a simulation starts between hours.
+        # This also prevents an interrupted/legacy response from introducing
+        # unrelated calendar days.
+        if "time" in out.coords:
+            out = out.sortby("time").sel(time=slice(
+                start.floor("h").tz_localize(None), forcing_end.tz_localize(None)
+            ))
         out.to_netcdf(outfile)
 
     process(raw_ws, proc_ws, ["wind_u", "wind_v", "pressure"])
@@ -4499,6 +4643,9 @@ def make_hydromt_build_config(
     sf = cfg["sfincs"]
     mesh = cfg["mesh"]
     model_mode = get_model_mode(cfg)
+    obs_locs = filter_observation_locations_to_domain(
+        obs_locs, Path(geo_meta["domain_path"])
+    )
 
     setup_config = {
         "tref": sfincs_time(start),
