@@ -60,7 +60,9 @@ if system in {"darwin", "linux"}:
         source = payload_root / directory
         if source.is_dir():
             datas.append((str(source), f"autocf/{directory}"))
-    for filename in ("README.md", "RELEASE-NOTES.txt", "START-HERE.txt"):
+    for filename in (
+        "README.md", "RELEASE-NOTES.txt", "START-HERE.txt", "release-manifest.json",
+    ):
         source = payload_root / filename
         if source.is_file():
             datas.append((str(source), "autocf"))
