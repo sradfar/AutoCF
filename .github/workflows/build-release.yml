@@ -53,6 +53,7 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
+          cache-dependency-path: packaging/requirements-build.txt
 
       - name: Restore managed scientific runtime
         shell: bash
