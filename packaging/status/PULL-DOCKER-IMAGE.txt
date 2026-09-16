@@ -1,0 +1,11 @@
+AutoCF 1.0.0 Docker runtime
+
+Pull:
+  docker pull ghcr.io/sradfar/autocf-runtime:1.0.0
+
+The image is headless and contains the managed scientific runtime used by the
+AutoCF desktop applications. It was built on GitHub Actions and smoke-tested
+for Python, native SFINCS startup, and the vertical-datum helper.
+
+Because the source repository is private, GitHub may require the user to log in
+to GHCR with permission to read this package before pulling it.

@@ -20,7 +20,7 @@ env:
 jobs:
   desktop:
     name: ${{ matrix.name }}
-    if: ${{ !contains(github.event.head_commit.message, '[docker-only]') }}
+    if: ${{ !contains(github.event.head_commit.message, '[docker-only]') && !contains(github.event.head_commit.message, '[docs-only]') }}
     strategy:
       fail-fast: false
       matrix:
@@ -138,6 +138,7 @@ jobs:
 
   docker:
     name: Docker amd64 runtime
+    if: ${{ !contains(github.event.head_commit.message, '[docs-only]') }}
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4

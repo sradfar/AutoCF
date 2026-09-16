@@ -1,7 +1,10 @@
 # AutoCF 1.0.0 offline Docker runtime
 
-Status: **offline export configured; GitHub Docker build not yet executed**.
+Status: **CI build and runtime smoke tests verified; downloaded**.
 
-After the image passes its smoke tests, the workflow exports and hashes
-`AutoCF-Runtime-1.0.0-amd64.tar.zst` for systems that cannot pull from GHCR.
+Artifact: `AutoCF-Runtime-1.0.0-amd64.tar.zst` (1,016,332,361 bytes).
+
+After the image passed Python, SFINCS, and datum-helper smoke tests, the workflow
+exported and hashed this offline archive. Local SHA-256 verification matches its
+CI sidecar: `e633241820b782320dec7509f0678fa87b504813d68b92e72022a30f96beb2cb`.
 
