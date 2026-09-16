@@ -22,5 +22,7 @@ docker run --rm --platform linux/amd64 "$IMAGE" /bin/sh -lc '
 '
 docker run --rm --platform linux/amd64 "$IMAGE" /usr/local/bin/transformez-helper --version
 
-docker save "$IMAGE" | zstd -T0 -19 -o "$OUT"
+# Level 9 provides a compact offline image without making CI spend tens of
+# minutes on the marginal gains of ultra compression (-19).
+docker save "$IMAGE" | zstd -T0 -9 -o "$OUT"
 sha256sum "$OUT" > "$OUT.sha256"
