@@ -141,10 +141,18 @@ RUN git clone https://github.com/noaa-ngs/HTDP.git /tmp/htdp && \\
     gfortran -O2 htdp.f initvl.f initeq.f initbd.f initps.f \\
       -o /opt/transformez-bin/htdp
 
+FROM --platform=$BUILDPLATFORM alpine:3.22 AS rootfs-unpacker
+
+COPY windows/runtime/autocf-wsl-rootfs.tar.gz /tmp/autocf-rootfs.tar.gz
+COPY windows/runtime/sfincs-cpu-rootfs.tar.gz /tmp/sfincs-rootfs.tar.gz
+RUN mkdir -p /rootfs /sfincs-rootfs && \\
+    tar -xzf /tmp/autocf-rootfs.tar.gz -C /rootfs && \\
+    tar -xzf /tmp/sfincs-rootfs.tar.gz -C /sfincs-rootfs
+
 FROM scratch
 
-ADD windows/runtime/autocf-wsl-rootfs.tar.gz /
-ADD windows/runtime/sfincs-cpu-rootfs.tar.gz /opt/sfincs-cpu/rootfs/
+COPY --from=rootfs-unpacker /rootfs/ /
+COPY --from=rootfs-unpacker /sfincs-rootfs/ /opt/sfincs-cpu/rootfs/
 COPY windows/runtime/sfincs-cpu-launcher.sh /usr/local/bin/sfincs-cpu
 COPY windows/runtime/wheels /opt/autocf-wheels
 COPY --from=datum-helper-builder /opt/transformez-site /opt/transformez-site

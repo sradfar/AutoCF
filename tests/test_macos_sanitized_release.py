@@ -87,6 +87,9 @@ class MacOSSanitizedReleaseTests(unittest.TestCase):
         self.assertIn("transformez_helper.pyc", sanitizer)
         self.assertIn("/opt/transformez-site", sanitizer)
         self.assertIn("transformez-helper.sh", sanitizer)
+        self.assertIn("rootfs-unpacker", sanitizer)
+        self.assertNotIn("ADD windows/runtime/autocf-wsl-rootfs.tar.gz", sanitizer)
+        self.assertNotIn("ADD windows/runtime/sfincs-cpu-rootfs.tar.gz", sanitizer)
         self.assertIn("exact-calendar-days-v2", agent)
         self.assertIn("filter_observation_locations_to_domain", agent)
 
