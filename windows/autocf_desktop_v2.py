@@ -6305,6 +6305,11 @@ class AutoCFWindow(QMainWindow):
         build or run. Saving must remain available throughout the guided new-model
         workflow and while repairing an imported model.
         """
+        if YAML is None:
+            QMessageBox.critical(
+                self, "Cannot save configuration",
+                "The bundled YAML editor is unavailable. Reinstall AutoCF from a complete release package.")
+            return False
         if self.session_mode == "new" and self.config_path is not None:
             if not self.ensure_event_workspace_current():
                 return False

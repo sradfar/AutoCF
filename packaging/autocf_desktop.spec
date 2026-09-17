@@ -49,6 +49,8 @@ hiddenimports += [
     "PySide6.QtWebEngineCore",
     "PySide6.QtWebEngineWidgets",
     "PIL.Image",
+    "ruamel.yaml",
+    "ruamel.yaml.clib",
     "yaml",
 ]
 

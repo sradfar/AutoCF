@@ -17,6 +17,7 @@ cd "$ROOT"
 }
 python3 -m pip install --upgrade pip
 python3 -m pip install -r packaging/requirements-build.txt
+python3 -c 'from ruamel.yaml import YAML; YAML(typ="safe")'
 
 WORK="$ROOT/.codex-build-macos-rc3/$RELEASE_ARCH"
 PAYLOAD="$WORK/payload"
