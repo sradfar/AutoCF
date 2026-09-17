@@ -10,7 +10,7 @@ import os
 import platform
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_all
+from PyInstaller.utils.hooks import collect_all, collect_data_files
 
 
 # PyInstaller defines SPECPATH as the directory containing this spec file.
@@ -27,6 +27,11 @@ if not entry_script.is_file():
 datas = []
 binaries = []
 hiddenimports = []
+
+# Python builds on clean macOS machines do not always inherit a usable system
+# CA store. Bundle Certifi's Mozilla roots so frozen HTTPS clients can verify
+# NOAA and the other data providers without weakening TLS verification.
+datas += collect_data_files("certifi")
 
 # On Windows/Linux, preserve the broad collection used by the tested edition2
 # package. On macOS, collecting the whole PySide6 distribution also captures
@@ -50,6 +55,7 @@ hiddenimports += [
     "PySide6.QtWebEngineWidgets",
     "PIL.Image",
     "_ruamel_yaml",
+    "certifi",
     "ruamel.yaml",
     "yaml",
 ]

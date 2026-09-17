@@ -18,6 +18,7 @@ cd "$ROOT"
 python3 -m pip install --upgrade pip
 python3 -m pip install -r packaging/requirements-build.txt
 python3 -c 'from ruamel.yaml import YAML; YAML(typ="safe")'
+python3 -c 'import certifi, pathlib; assert pathlib.Path(certifi.where()).is_file()'
 
 WORK="$ROOT/.codex-build-macos-rc3/$RELEASE_ARCH"
 PAYLOAD="$WORK/payload"
@@ -55,6 +56,7 @@ APP="$PYI_DIST/AutoCF.app"
 test -d "$APP"
 find "$APP" -name 'QtWebEngineProcess*' -print -quit | grep -q .
 find "$APP" -iname '*QtWebEngineCore*' -print -quit | grep -q .
+find "$APP" -path '*certifi/cacert.pem' -print -quit | grep -q .
 python3 packaging/verify_macos_sanitized.py "$APP"
 
 IDENTITY="${AUTOCF_CODESIGN_IDENTITY:--}"
