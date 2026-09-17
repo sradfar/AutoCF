@@ -45,7 +45,14 @@ class MacOSSanitizedReleaseTests(unittest.TestCase):
     def test_host_runtime_prefers_bytecode_with_source_fallback(self) -> None:
         import sys
         sys.path.insert(0, str(ROOT / "windows"))
-        from host_runtime import packaged_python_entry
+        from host_runtime import container_engine_candidates, packaged_python_entry
+
+        candidates = container_engine_candidates("darwin", Path("/Users/researcher"))
+        self.assertIn(
+            Path("/Applications/Docker.app/Contents/Resources/bin/docker"),
+            candidates,
+        )
+        self.assertIn(Path("/Users/researcher/.docker/bin/docker"), candidates)
 
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

@@ -67,8 +67,30 @@ def parse_options(arguments: list[str]) -> dict[str, str | bool]:
     return options
 
 
+def container_engine_candidates(
+    system: str | None = None, home: Path | None = None,
+) -> tuple[Path, ...]:
+    """Return native desktop-engine locations omitted from GUI app PATHs."""
+    if (system or platform.system()).lower() != "darwin":
+        return ()
+    user_home = (home or Path.home()).expanduser()
+    return (
+        user_home / ".docker" / "bin" / "docker",
+        Path("/Applications/Docker.app/Contents/Resources/bin/docker"),
+        Path("/usr/local/bin/docker"),
+        Path("/opt/homebrew/bin/docker"),
+        Path("/Applications/Podman Desktop.app/Contents/Resources/resources/podman"),
+    )
+
+
 def container_engine() -> str | None:
-    return shutil.which("docker") or shutil.which("podman")
+    discovered = shutil.which("docker") or shutil.which("podman")
+    if discovered:
+        return discovered
+    for candidate in container_engine_candidates():
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return str(candidate)
+    return None
 
 
 def run_checked(command: list[str]) -> int:
