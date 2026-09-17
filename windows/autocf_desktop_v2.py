@@ -5283,10 +5283,20 @@ class AutoCFWindow(QMainWindow):
     def _make_run_page(self) -> QWidget:
         page, layout = self.page("Build & Run", "Build or run with the bundled SFINCS CPU (OpenMP) backend.")
         group = QGroupBox("Operation"); form = QFormLayout(group)
+        form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
+        form.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapLongRows)
         self.run_operation = QComboBox()
         self.run_operation.addItem("Build project only (CPU)", "build")
         self.run_operation.addItem("Run project — build/update if needed (CPU)", "run")
-        self.run_summary = QLabel(); self.run_summary.setWordWrap(True)
+        self.run_summary = QLabel()
+        self.run_summary.setWordWrap(True)
+        self.run_summary.setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.run_summary.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.run_summary.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
+        self.run_summary.setMinimumHeight(self.fontMetrics().lineSpacing() * 3 + 8)
         form.addRow("Operation", self.run_operation); form.addRow("Configuration", self.run_summary)
         layout.addWidget(group)
         actions = QHBoxLayout()
@@ -6358,6 +6368,7 @@ class AutoCFWindow(QMainWindow):
         marker = " *" if self.dirty else ""
         self.setWindowTitle(f"AutoCF Desktop {APP_VERSION} — {self.project_name.text().strip() or 'Untitled'}{marker}")
         self.run_summary.setText(f"{self.config_path or 'No YAML selected'}\nCPU threads: {'Automatic' if self.cpu_threads.value() == 0 else self.cpu_threads.value()}")
+        self.run_summary.updateGeometry()
 
     def validation_messages(self) -> tuple[list[str], list[str]]:
         errors, warnings = [], []
