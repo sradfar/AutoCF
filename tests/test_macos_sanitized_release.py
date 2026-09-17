@@ -45,7 +45,9 @@ class MacOSSanitizedReleaseTests(unittest.TestCase):
     def test_host_runtime_prefers_bytecode_with_source_fallback(self) -> None:
         import sys
         sys.path.insert(0, str(ROOT / "windows"))
-        from host_runtime import container_engine_candidates, packaged_python_entry
+        from host_runtime import (
+            container_engine_candidates, packaged_python_entry, shared_runtime_root,
+        )
 
         candidates = container_engine_candidates("darwin", Path("/Users/researcher"))
         self.assertIn(
@@ -63,6 +65,18 @@ class MacOSSanitizedReleaseTests(unittest.TestCase):
                 packaged_python_entry(root, "app/sfincs_agent"),
                 "/workspace/app/sfincs_agent.pyc",
             )
+
+        with tempfile.TemporaryDirectory() as folder:
+            base = Path(folder)
+            source = base / "mounted-app" / "autocf"
+            source.mkdir(parents=True)
+            (source / "release-manifest.json").write_text('{"version":"test"}\n')
+            (source / "payload.bin").write_bytes(b"runtime")
+            home = base / "Users" / "researcher"
+            staged = shared_runtime_root(
+                source, create=True, system="darwin", home=home)
+            self.assertTrue(staged.is_relative_to(home))
+            self.assertEqual((staged / "payload.bin").read_bytes(), b"runtime")
 
     def test_builder_and_spec_use_sanitized_payload(self) -> None:
         builder = (ROOT / "packaging" / "build_macos_rc3.sh").read_text(encoding="utf-8")
@@ -88,6 +102,7 @@ class MacOSSanitizedReleaseTests(unittest.TestCase):
         self.assertIn("/opt/transformez-site", sanitizer)
         self.assertIn("transformez-helper.sh", sanitizer)
         self.assertIn("rootfs-unpacker", sanitizer)
+        self.assertIn("TRANSFORMEZ_VERSION=0.2.3", sanitizer)
         self.assertNotIn("ADD windows/runtime/autocf-wsl-rootfs.tar.gz", sanitizer)
         self.assertNotIn("ADD windows/runtime/sfincs-cpu-rootfs.tar.gz", sanitizer)
         self.assertIn("exact-calendar-days-v2", agent)

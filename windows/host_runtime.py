@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import platform
+import hashlib
 import shutil
 import subprocess
 import sys
@@ -93,6 +94,44 @@ def container_engine() -> str | None:
     return None
 
 
+def shared_runtime_root(
+    root: Path, *, create: bool = False, system: str | None = None,
+    home: Path | None = None,
+) -> Path:
+    """Stage packaged macOS resources under the Docker-shared user home.
+
+    Docker Desktop shares ``/Users`` by default but not ``/Applications``.
+    A versioned copy also keeps application signing intact because the bundle
+    itself is never modified after installation.
+    """
+    source = root.expanduser().resolve()
+    if (system or platform.system()).lower() != "darwin":
+        return source
+    user_home = (home or Path.home()).expanduser().resolve()
+    try:
+        source.relative_to(user_home)
+        return source
+    except ValueError:
+        pass
+    manifest = source / "release-manifest.json"
+    identity = manifest.read_bytes() if manifest.is_file() else str(source).encode("utf-8")
+    fingerprint = hashlib.sha256(identity).hexdigest()[:16]
+    base = user_home / "Library" / "Application Support" / "AutoCF"
+    destination = base / f"runtime-{fingerprint}"
+    if destination.is_dir() or not create:
+        return destination
+    base.mkdir(parents=True, exist_ok=True)
+    staging = base / f".runtime-{fingerprint}-{os.getpid()}"
+    print(f"Staging AutoCF runtime for Docker file sharing: {destination}", flush=True)
+    shutil.copytree(source, staging, symlinks=True)
+    try:
+        staging.replace(destination)
+    except FileExistsError:
+        shutil.rmtree(staging)
+    print("AutoCF runtime staging: PASS", flush=True)
+    return destination
+
+
 def run_checked(command: list[str]) -> int:
     print("$ " + " ".join(command), flush=True)
     return subprocess.run(command).returncode
@@ -104,6 +143,9 @@ def platform_arguments() -> list[str]:
 
 
 def status(root: Path, compute: object = "auto") -> int:
+    staged = shared_runtime_root(root)
+    if staged.is_dir():
+        root = staged
     print("=" * 68)
     print(" AutoCF host status")
     print("=" * 68)
@@ -143,6 +185,7 @@ def install(root: Path) -> int:
     if subprocess.run([engine, "info"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode:
         print("The container engine is installed but not running. Start it and select Install again.")
         return 2
+    root = shared_runtime_root(root, create=True)
     dockerfile = root / "host" / "Dockerfile.runtime"
     required = [
         dockerfile,
@@ -228,6 +271,11 @@ def execute(root: Path, options: dict[str, str | bool]) -> int:
     if engine is None:
         print("The managed container runtime is unavailable. Select Install / repair runtime.")
         return 2
+    staged = shared_runtime_root(root)
+    if platform.system() == "Darwin" and not staged.is_dir():
+        print("The Docker-shared AutoCF runtime is not installed. Select Install / repair runtime.")
+        return 2
+    root = staged if staged.is_dir() else root
     config_value = options.get("config")
     if not isinstance(config_value, str):
         print("A configuration file is required.")

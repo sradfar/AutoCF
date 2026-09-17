@@ -127,7 +127,7 @@ def assemble(root: Path, destination: Path, version: str, architecture: str) -> 
     host.mkdir()
     dockerfile = """FROM python:3.11-slim-bookworm AS datum-helper-builder
 
-ARG TRANSFORMEZ_VERSION=0.5.1
+ARG TRANSFORMEZ_VERSION=0.2.3
 ARG HTDP_COMMIT=59fdbe6b7cf5fabf79f901801ecdc33e7ca2095c
 
 RUN apt-get update && apt-get install -y --no-install-recommends \\
