@@ -68,6 +68,7 @@ class MacOSSanitizedReleaseTests(unittest.TestCase):
         self.assertIn("AUTOCF_PAYLOAD_ROOT", spec)
         self.assertIn("ruamel.yaml", requirements)
         self.assertIn('"ruamel.yaml"', spec)
+        self.assertIn('"_ruamel_yaml"', spec)
         self.assertIn("from ruamel.yaml import YAML", builder)
         self.assertIn("transformez_helper.pyc", sanitizer)
         self.assertIn("/opt/transformez-site", sanitizer)
