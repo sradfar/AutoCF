@@ -75,7 +75,7 @@ class MacOSSanitizedReleaseTests(unittest.TestCase):
             home = base / "Users" / "researcher"
             staged = shared_runtime_root(
                 source, create=True, system="darwin", home=home)
-            self.assertTrue(staged.is_relative_to(home))
+            self.assertTrue(staged.is_relative_to(home.resolve()))
             self.assertEqual((staged / "payload.bin").read_bytes(), b"runtime")
 
     def test_builder_and_spec_use_sanitized_payload(self) -> None:
